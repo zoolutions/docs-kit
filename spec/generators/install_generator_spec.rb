@@ -1101,6 +1101,40 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
       expect(read(".gitignore").scan(sources_path).size).to eq(1)
     end
 
+    it "treats a bare-filename ignore line as covering (matches at any depth — no duplicate)" do
+      build_skeleton
+      write(".gitignore", "tailwind.sources.css\n")
+
+      run_generator
+
+      expect(read(".gitignore")).to eq("tailwind.sources.css\n")
+    end
+
+    it "respects a site's explicit negation (!) — never appends an override" do
+      # A site that deliberately unignores + commits the file has opted out of
+      # the fleet convention. Appending our entry would become the LAST matching
+      # rule and silently defeat the hand-edit — so the generator backs off.
+      build_skeleton
+      write(".gitignore", "app/assets/stylesheets/*\n!/#{sources_path}\n")
+
+      output = capture_generator
+
+      expect(read(".gitignore")).to eq("app/assets/stylesheets/*\n!/#{sources_path}\n")
+      expect(output).to match(/negat|opt-out/i)
+    end
+
+    it "an explicit negation also silences the git-tracked drift warning (a deliberate commit)" do
+      build_skeleton
+      write(sources_path, "/* deliberately committed */\n")
+      write(".gitignore", "!#{sources_path}\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(output).not_to include("git rm --cached")
+    end
+
     it "adds the entry on --sync (the fleet-wide upgrade path)" do
       build_skeleton
       write(".gitignore", "/node_modules\n")

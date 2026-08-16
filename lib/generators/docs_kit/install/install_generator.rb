@@ -59,9 +59,9 @@ module DocsKit
 
       # The generated Tailwind @source globs file bin/build-css rewrites on
       # every build — gitignored fleet-wide (see ignore_generated_css_sources).
+      # The covering/negation line regexes live beside the path in SyncReport,
+      # which shares them for the tracked-file drift check.
       TAILWIND_SOURCES = SyncReport::TAILWIND_SOURCES
-      # A non-negated .gitignore line already covering it, leading slash or not.
-      TAILWIND_SOURCES_IGNORED_RE = %r{^/?#{Regexp.escape(TAILWIND_SOURCES)}\s*$}
 
       # The RuboCop wiring docs-kit injects. REQUIRE loads the cops;
       # INHERIT_GEM/INHERIT_PATH enable + scope them (see config/rubocop/docs_kit.yml).
@@ -212,7 +212,15 @@ module DocsKit
         path = File.join(destination_root, ".gitignore")
         return create_file(".gitignore", entry) unless File.exist?(path)
 
-        if File.read(path).match?(TAILWIND_SOURCES_IGNORED_RE)
+        content = File.read(path)
+        # An explicit `!` unignore is the site's deliberate opt-out — appending
+        # our entry AFTER it would become the last matching rule and silently
+        # defeat the hand-edit. Back off (and SyncReport skips its nag too).
+        if content.match?(SyncReport::TAILWIND_SOURCES_NEGATED_RE)
+          return say_status(:skip, ".gitignore negates tailwind.sources.css (!) — respecting the site's opt-out",
+                            :yellow)
+        end
+        if content.match?(SyncReport::TAILWIND_SOURCES_IGNORED_RE)
           return say_status(:identical, ".gitignore (tailwind.sources.css)", :blue)
         end
 
