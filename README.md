@@ -118,6 +118,7 @@ generators:
 | `app/helpers/icon_helper.rb` | docs-kit renders icons via rails_icons (`DocsUI::Icon`) | Delete the file. |
 | Hand-pinned docs-kit lines in `config/importmap.rb` | the engine auto-pins the `docs-nav` controller and its assets | Delete the manual `pin`/`pin_all_from` lines for docs-kit. |
 | `Dockerfile` stamped by an older docs-kit (`# docs-kit Dockerfile vX.Y.Z`) | docs-kit ships an optimized, multi-stage Dockerfile; a stale copy misses image-size wins | Diff yours against the current template (`lib/generators/docs_kit/install/templates/Dockerfile.tt` in the gem), adopt the changes or replace it. See [Upgrading your Dockerfile](#upgrading-your-dockerfile). |
+| `app/assets/stylesheets/tailwind.sources.css` committed to git | `bin/build-css` regenerates it on every build with machine-specific absolute gem paths — the committed copy churns per machine/Ruby and no build consumes it. The generator adds the `.gitignore` entry, but gitignoring doesn't untrack an already-committed copy. | `git rm --cached app/assets/stylesheets/tailwind.sources.css` and commit. |
 
 ### Upgrading your Dockerfile
 
