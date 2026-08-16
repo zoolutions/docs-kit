@@ -6,9 +6,9 @@
 #
 #   jobs:
 #     deploy:
-#       uses: mhenrixon/docs-kit/.github/workflows/deploy.yml@main
+#       uses: zoolutions/docs-kit/.github/workflows/deploy.yml@main
 #       with:
-#         image: mhenrixon/my-docs
+#         image: zoolutions/my-docs
 #       secrets: inherit
 #
 # The image is built once (buildx, registry cache) and Kamal deploys it with
@@ -20,7 +20,7 @@ on:
     inputs:
       image:
         description: >-
-          GHCR image repo, e.g. mhenrixon/daisyui (no registry, no tag). Use the
+          GHCR image repo, e.g. zoolutions/daisyui (no registry, no tag). Use the
           OWNER/REPO of the calling repo so the pushed package auto-links to the
           repo — then GITHUB_TOKEN can push AND pull it, no PAT needed. (A name
           that doesn't match the repo becomes an unlinked user-scoped package that

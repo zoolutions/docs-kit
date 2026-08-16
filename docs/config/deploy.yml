@@ -2,7 +2,7 @@
 # service/image = the repo OWNER/REPO so the ghcr package auto-links to the
 # repo and GITHUB_TOKEN can push + pull it (no PAT). See docs-kit's README.
 service: docs-kit
-image: mhenrixon/docs-kit
+image: zoolutions/docs-kit
 
 servers:
   web:
