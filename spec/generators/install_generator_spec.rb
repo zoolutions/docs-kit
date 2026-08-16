@@ -1148,6 +1148,21 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
       expect(output).to include("git rm --cached #{sources_path}")
     end
 
+    it "still warns when a dead negation precedes an UNRECOGNIZED broad ignore (git's verdict wins)" do
+      # The recognized-lines regex can't see `app/assets/stylesheets/*`, but the
+      # drift check asks `git check-ignore` — git says the file is effectively
+      # ignored, so the negation is dead and the tracked copy still gets the nag.
+      build_skeleton
+      write(".gitignore", "!#{sources_path}\napp/assets/stylesheets/*\n")
+      write(sources_path, "/* tracked while effectively ignored by a broad glob */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", "-f", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(output).to include("git rm --cached #{sources_path}")
+    end
+
     it "an explicit negation also silences the git-tracked drift warning (a deliberate commit)" do
       build_skeleton
       write(sources_path, "/* deliberately committed */\n")
