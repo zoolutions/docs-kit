@@ -1,0 +1,24 @@
+lib/generators/docs_kit/install/sync_report.rb
+  s_6129b5027d5f8b::t_0db2716303a8e6 37-38,41,45-46,49-64
+  s_6129b5027d5f8b::t_5833079d09a293 136-138,140
+lib/generators/docs_kit/install/install_generator.rb
+  s_6129b5027d5f8b::t_a6a11790c52671 215-226
+spec/generators/install_generator_spec.rb
+  s_6129b5027d5f8b::t_257e3af6ecb493 1126-1150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8c3e29f9a4ab490f0d7125f17fc46b9d2823b308",
+  "prompts": {},
+  "sessions": {
+    "s_6129b5027d5f8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82b8e88c-7b62-40b5-b4f7-a3fbf5c1ee5a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
