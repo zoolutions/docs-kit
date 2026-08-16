@@ -21,9 +21,9 @@ require "securerandom"
 # --- config the template reads ------------------------------------------------
 # DOCS_KIT_GEM_SOURCE lets the dogfood site (docs-kit/docs) depend on the gem via
 # path: ".." while a real new site depends on the released gem. Default: rubygems.
-gem_source = ENV.fetch("DOCS_KIT_GEM_SOURCE", "") # e.g. 'path: "..", ' or 'github: "mhenrixon/docs-kit", '
+gem_source = ENV.fetch("DOCS_KIT_GEM_SOURCE", "") # e.g. 'path: "..", ' or 'github: "zoolutions/docs-kit", '
 # The GHCR image/service = the OWNER/REPO the site will live in (repo-linked pkg).
-image = ENV.fetch("DOCS_KIT_IMAGE", "mhenrixon/#{app_name}")
+image = ENV.fetch("DOCS_KIT_IMAGE", "zoolutions/#{app_name}")
 service = ENV.fetch("DOCS_KIT_SERVICE", app_name)
 
 # --- gems ---------------------------------------------------------------------
@@ -120,7 +120,7 @@ after_bundle do
       workflow_dispatch:
     jobs:
       deploy:
-        uses: mhenrixon/docs-kit/.github/workflows/deploy.yml@main
+        uses: zoolutions/docs-kit/.github/workflows/deploy.yml@main
         with:
           image: #{image}
           service: #{service}

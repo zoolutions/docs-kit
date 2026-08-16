@@ -38,11 +38,11 @@ Gem::Specification.new do |s|
   s.bindir = "exe"
   s.executables = s.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
 
-  s.homepage = "https://github.com/mhenrixon/docs-kit"
+  s.homepage = "https://github.com/zoolutions/docs-kit"
   s.metadata = {
-    "source_code_uri" => "https://github.com/mhenrixon/docs-kit",
-    "changelog_uri" => "https://github.com/mhenrixon/docs-kit/blob/main/CHANGELOG.md",
-    "bug_tracker_uri" => "https://github.com/mhenrixon/docs-kit/issues",
+    "source_code_uri" => "https://github.com/zoolutions/docs-kit",
+    "changelog_uri" => "https://github.com/zoolutions/docs-kit/blob/main/CHANGELOG.md",
+    "bug_tracker_uri" => "https://github.com/zoolutions/docs-kit/issues",
     "rubygems_mfa_required" => "true"
   }
 

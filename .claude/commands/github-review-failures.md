@@ -51,7 +51,7 @@ Categorise each failing check:
 | Docs-site deploy (if triggered) | `Deploy docs` | `gh run view <RUN_ID> --job=<JOB_ID> --log-failed` |
 
 Extract the run ID and job IDs from the check URLs. The URL format is:
-`https://github.com/mhenrixon/docs-kit/actions/runs/<RUN_ID>/job/<JOB_ID>`
+`https://github.com/zoolutions/docs-kit/actions/runs/<RUN_ID>/job/<JOB_ID>`
 
 If all checks pass or are pending, report that and stop.
 
