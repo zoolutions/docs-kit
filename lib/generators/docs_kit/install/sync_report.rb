@@ -34,14 +34,34 @@ module DocsKit
       # is missed at the cost of one redundant, harmless line — whereas
       # `git check-ignore` would conflate a user's global excludes with the
       # repo's committed convention.
+      # `[ \t\r]*` (not `[ \t]*`): `$` matches before `\n` but never past a
+      # `\r`, so the class must consume the CR of a CRLF-checked-out file.
       TAILWIND_SOURCES_COVER =
         "(?:(?:/|\\*\\*/)?#{Regexp.escape(File.dirname(TAILWIND_SOURCES))}/|(?:\\*\\*/)?)" \
-        "#{Regexp.escape(File.basename(TAILWIND_SOURCES))}[ \t]*".freeze
+        "#{Regexp.escape(File.basename(TAILWIND_SOURCES))}[ \t\r]*".freeze
       TAILWIND_SOURCES_IGNORED_RE = /^#{TAILWIND_SOURCES_COVER}$/
       # An explicit `!` unignore of the file — the site's deliberate opt-out
       # from the fleet convention (it wants the file committed). Both the
-      # generator's append and the tracked-file drift warning respect it.
+      # generator's append and the tracked-file drift warning respect it —
+      # but only when it's the file's EFFECTIVE rule (see .tailwind_sources_rule).
       TAILWIND_SOURCES_NEGATED_RE = /^!#{TAILWIND_SOURCES_COVER}$/
+
+      # The file's effective disposition among the recognized .gitignore lines,
+      # honoring git's last-match-wins: `:negate` (the site's genuine opt-out),
+      # `:ignore` (already covered), or nil (no recognized line). A `!` line
+      # overridden by a LATER ignore line is dead — git ignores the file, so
+      # treating it as an opt-out would suppress a warranted drift warning.
+      def self.tailwind_sources_rule(gitignore_content)
+        rule = nil
+        gitignore_content.each_line do |line|
+          if line.match?(TAILWIND_SOURCES_NEGATED_RE)
+            rule = :negate
+          elsif line.match?(TAILWIND_SOURCES_IGNORED_RE)
+            rule = :ignore
+          end
+        end
+        rule
+      end
 
       # Matches the version stamp the Dockerfile template writes, e.g.
       # `# docs-kit Dockerfile v1.0.2`. Absent on a hand-written Dockerfile a site
@@ -113,11 +133,11 @@ module DocsKit
           "run `git rm --cached #{TAILWIND_SOURCES}` and commit (the ignore entry is in place)."
       end
 
-      # The site wrote an explicit `!` exception for the file — it has opted to
-      # commit it on purpose, so nagging `git rm --cached` every sync would
-      # fight a deliberate hand-edit.
+      # The site's EFFECTIVE rule for the file is an explicit `!` exception —
+      # it has opted to commit it on purpose, so nagging `git rm --cached`
+      # every sync would fight a deliberate hand-edit.
       def gitignore_negates_tailwind_sources?
-        read(".gitignore")&.match?(TAILWIND_SOURCES_NEGATED_RE) || false
+        self.class.tailwind_sources_rule(read(".gitignore").to_s) == :negate
       end
 
       # True when the site's git index tracks `rel`. Conservative: no git on

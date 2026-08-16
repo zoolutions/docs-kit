@@ -212,19 +212,19 @@ module DocsKit
         path = File.join(destination_root, ".gitignore")
         return create_file(".gitignore", entry) unless File.exist?(path)
 
-        content = File.read(path)
-        # An explicit `!` unignore is the site's deliberate opt-out — appending
-        # our entry AFTER it would become the last matching rule and silently
-        # defeat the hand-edit. Back off (and SyncReport skips its nag too).
-        if content.match?(SyncReport::TAILWIND_SOURCES_NEGATED_RE)
-          return say_status(:skip, ".gitignore negates tailwind.sources.css (!) — respecting the site's opt-out",
-                            :yellow)
+        # Last-match-wins, like git reads the file: an EFFECTIVE `!` unignore is
+        # the site's deliberate opt-out — appending our entry after it would
+        # become the last matching rule and silently defeat the hand-edit, so
+        # back off (SyncReport skips its nag too). An effective ignore is done.
+        case SyncReport.tailwind_sources_rule(File.read(path))
+        when :negate
+          say_status(:skip, ".gitignore negates tailwind.sources.css (!) — respecting the site's opt-out",
+                     :yellow)
+        when :ignore
+          say_status(:identical, ".gitignore (tailwind.sources.css)", :blue)
+        else
+          append_to_file ".gitignore", "\n#{entry}"
         end
-        if content.match?(SyncReport::TAILWIND_SOURCES_IGNORED_RE)
-          return say_status(:identical, ".gitignore (tailwind.sources.css)", :blue)
-        end
-
-        append_to_file ".gitignore", "\n#{entry}"
       end
 
       # Install the `docs_kit:og` rake task — gem-owned wiring, refreshed on every

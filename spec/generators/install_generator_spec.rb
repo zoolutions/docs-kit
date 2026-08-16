@@ -1123,6 +1123,31 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
       expect(output).to match(/negat|opt-out/i)
     end
 
+    it "recognizes an existing entry on a CRLF .gitignore (no duplicate per re-run)" do
+      build_skeleton
+      write(".gitignore", "/#{sources_path}\r\n")
+
+      run_generator
+
+      expect(read(".gitignore")).to eq("/#{sources_path}\r\n")
+    end
+
+    it "honors last-match-wins: a dead negation followed by an ignore line is NOT an opt-out" do
+      # git reads the LAST matching line — a later ignore rule overrides the
+      # negation, so the file is effectively ignored: no append needed, and the
+      # tracked-file drift warning must still fire.
+      build_skeleton
+      write(".gitignore", "!#{sources_path}\n/#{sources_path}\n")
+      write(sources_path, "/* tracked while effectively ignored */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", "-f", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(read(".gitignore")).to eq("!#{sources_path}\n/#{sources_path}\n")
+      expect(output).to include("git rm --cached #{sources_path}")
+    end
+
     it "an explicit negation also silences the git-tracked drift warning (a deliberate commit)" do
       build_skeleton
       write(sources_path, "/* deliberately committed */\n")
