@@ -161,6 +161,9 @@ module DocsUI
         end
         render DocsUI::SearchBox.new if config.search_enabled?
         div(class: "flex-none items-center") do
+          # The docs-version switcher (config.versions) renders first; nothing
+          # unless versioning is enabled, so an unversioned topbar is unchanged.
+          render DocsUI::VersionSwitcher.new
           # Config-driven repo/social links (config.topbar_links) render as
           # icon-only ghost buttons BEFORE the switcher; nothing when unset.
           render DocsUI::TopbarLinks.new

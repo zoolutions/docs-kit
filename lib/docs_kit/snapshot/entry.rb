@@ -9,7 +9,7 @@ module DocsKit
     # DocsUI::ArchivedPage constant, so the `select(&:view_class)` authored-page
     # filter passes unchanged.
     class Entry
-      attr_reader :slug, :title, :group, :icon, :file, :digest, :href
+      attr_reader :slug, :title, :group, :icon, :file, :digest, :href, :version
 
       def initialize(attrs, version:, root:, registry_prefix:)
         @slug = attrs["slug"]
@@ -19,6 +19,7 @@ module DocsKit
         @file = attrs["file"]
         @digest = attrs["digest"]
         @root = root
+        @version = version
         @href = "#{version.path_prefix}#{registry_prefix}/#{@slug}"
       end
 

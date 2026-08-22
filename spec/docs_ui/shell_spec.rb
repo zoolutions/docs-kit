@@ -81,6 +81,34 @@ RSpec.describe DocsUI::Shell do
     end
   end
 
+  # The version switcher sits in the topbar right before the repo/social links.
+  # It renders NOTHING unless versioning is enabled, so an unversioned site's
+  # topbar stays byte-identical.
+  describe "the topbar version switcher" do
+    let(:topbar_only) do
+      Class.new(described_class) do
+        def view_template = topbar
+      end
+    end
+
+    it "renders no switcher on an unversioned site (the byte-identical pin)" do
+      html = topbar_only.new.call
+
+      expect(html).not_to include("version-switcher")
+    end
+
+    it "renders the switcher when two or more versions are configured" do
+      DocsKit.configure do |c|
+        c.versions = [{ id: "1.1", current: true }, { id: "1.0" }]
+      end
+
+      html = topbar_only.new.call
+
+      expect(html).to include("1.1")
+      expect(html).to include("1.0")
+    end
+  end
+
   # The opt-in brand mark (config.brand_logo) — rendered inside the brand anchor
   # in place of the text brand. Absent config → the text brand, byte-identical
   # to before. config.topbar_brand = :mobile_only additionally hides the topbar
