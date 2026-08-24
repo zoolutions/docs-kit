@@ -1150,8 +1150,8 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
 
     it "still warns when a dead negation precedes an UNRECOGNIZED broad ignore (git's verdict wins)" do
       # The recognized-lines regex can't see `app/assets/stylesheets/*`, but the
-      # drift check asks `git check-ignore` — git says the file is effectively
-      # ignored, so the negation is dead and the tracked copy still gets the nag.
+      # drift check asks git itself — git says the file is effectively ignored,
+      # so the negation is dead and the tracked copy still gets the nag.
       build_skeleton
       write(".gitignore", "!#{sources_path}\napp/assets/stylesheets/*\n")
       write(sources_path, "/* tracked while effectively ignored by a broad glob */\n")
@@ -1196,6 +1196,25 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
       # Warn-only: still tracked, file untouched.
       expect(system("git", "-C", destination, "ls-files", "--error-unmatch", sources_path,
                     out: File::NULL, err: File::NULL)).to be(true)
+    end
+
+    it "ignores machine-local excludes (.git/info/exclude) — the sync report is machine-independent" do
+      # The drift verdict must come from the repo's COMMITTED .gitignore files
+      # only: a developer's personal excludes (.git/info/exclude or a global
+      # core.excludesFile) would otherwise flip the warning per machine — and
+      # its "the ignore entry is in place" guidance would be a lie (the repo
+      # has no entry). Here only info/exclude ignores the tracked file: the
+      # report must stay quiet on the tailwind drift.
+      build_skeleton
+      write(sources_path, "/* tracked; ignored only by a personal exclude */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", sources_path)
+      FileUtils.mkdir_p(File.join(destination, ".git/info"))
+      File.write(File.join(destination, ".git/info/exclude"), "#{sources_path}\n")
+
+      report = DocsKit::Generators::SyncReport.new(destination)
+
+      expect(report.items.join).not_to include("git rm --cached")
     end
 
     it "does NOT warn when the site is not a git repository" do
