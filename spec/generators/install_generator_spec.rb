@@ -1057,6 +1057,176 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
     end
   end
 
+  # Fleet convention (#71): bin/build-css regenerates tailwind.sources.css on
+  # every build with machine-specific absolute gem paths — committed, it churns
+  # per machine/Ruby and no build consumes the committed copy. The generator
+  # gitignores it (additive, idempotent, runs under --sync too); untracking an
+  # already-committed copy is warned via the drift report, never automated.
+  describe "gitignoring the generated tailwind.sources.css" do
+    let(:sources_path) { "app/assets/stylesheets/tailwind.sources.css" }
+
+    it "appends the ignore entry to an existing .gitignore" do
+      build_skeleton
+      write(".gitignore", "/node_modules\n")
+
+      run_generator
+
+      gitignore = read(".gitignore")
+      expect(gitignore).to include("/node_modules")
+      expect(gitignore).to match(%r{^/#{Regexp.escape(sources_path)}$})
+    end
+
+    it "creates a .gitignore carrying the entry when the site has none" do
+      build_skeleton
+
+      run_generator
+
+      expect(read(".gitignore")).to match(%r{^/#{Regexp.escape(sources_path)}$})
+    end
+
+    it "is idempotent — a re-run adds no duplicate entry" do
+      build_skeleton
+      run_generator
+      run_generator
+
+      expect(read(".gitignore").scan(sources_path).size).to eq(1)
+    end
+
+    it "tolerates a hand-added entry without a leading slash (no duplicate)" do
+      build_skeleton
+      write(".gitignore", "#{sources_path}\n")
+
+      run_generator
+
+      expect(read(".gitignore").scan(sources_path).size).to eq(1)
+    end
+
+    it "treats a bare-filename ignore line as covering (matches at any depth — no duplicate)" do
+      build_skeleton
+      write(".gitignore", "tailwind.sources.css\n")
+
+      run_generator
+
+      expect(read(".gitignore")).to eq("tailwind.sources.css\n")
+    end
+
+    it "respects a site's explicit negation (!) — never appends an override" do
+      # A site that deliberately unignores + commits the file has opted out of
+      # the fleet convention. Appending our entry would become the LAST matching
+      # rule and silently defeat the hand-edit — so the generator backs off.
+      build_skeleton
+      write(".gitignore", "app/assets/stylesheets/*\n!/#{sources_path}\n")
+
+      output = capture_generator
+
+      expect(read(".gitignore")).to eq("app/assets/stylesheets/*\n!/#{sources_path}\n")
+      expect(output).to match(/negat|opt-out/i)
+    end
+
+    it "recognizes an existing entry on a CRLF .gitignore (no duplicate per re-run)" do
+      build_skeleton
+      write(".gitignore", "/#{sources_path}\r\n")
+
+      run_generator
+
+      expect(read(".gitignore")).to eq("/#{sources_path}\r\n")
+    end
+
+    it "honors last-match-wins: a dead negation followed by an ignore line is NOT an opt-out" do
+      # git reads the LAST matching line — a later ignore rule overrides the
+      # negation, so the file is effectively ignored: no append needed, and the
+      # tracked-file drift warning must still fire.
+      build_skeleton
+      write(".gitignore", "!#{sources_path}\n/#{sources_path}\n")
+      write(sources_path, "/* tracked while effectively ignored */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", "-f", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(read(".gitignore")).to eq("!#{sources_path}\n/#{sources_path}\n")
+      expect(output).to include("git rm --cached #{sources_path}")
+    end
+
+    it "still warns when a dead negation precedes an UNRECOGNIZED broad ignore (git's verdict wins)" do
+      # The recognized-lines regex can't see `app/assets/stylesheets/*`, but the
+      # drift check asks git itself — git says the file is effectively ignored,
+      # so the negation is dead and the tracked copy still gets the nag.
+      build_skeleton
+      write(".gitignore", "!#{sources_path}\napp/assets/stylesheets/*\n")
+      write(sources_path, "/* tracked while effectively ignored by a broad glob */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", "-f", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(output).to include("git rm --cached #{sources_path}")
+    end
+
+    it "an explicit negation also silences the git-tracked drift warning (a deliberate commit)" do
+      build_skeleton
+      write(sources_path, "/* deliberately committed */\n")
+      write(".gitignore", "!#{sources_path}\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(output).not_to include("git rm --cached")
+    end
+
+    it "adds the entry on --sync (the fleet-wide upgrade path)" do
+      build_skeleton
+      write(".gitignore", "/node_modules\n")
+
+      run_generator(sync: true)
+
+      expect(read(".gitignore")).to match(%r{^/#{Regexp.escape(sources_path)}$})
+    end
+
+    it "warns to git rm --cached when the file is tracked by git (warn-only, never mutates git)" do
+      build_skeleton
+      write(sources_path, "/* stale committed copy */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", sources_path)
+
+      output = capture_generator(sync: true)
+
+      expect(output).to include("git rm --cached #{sources_path}")
+      # Warn-only: still tracked, file untouched.
+      expect(system("git", "-C", destination, "ls-files", "--error-unmatch", sources_path,
+                    out: File::NULL, err: File::NULL)).to be(true)
+    end
+
+    it "ignores machine-local excludes (.git/info/exclude) — the sync report is machine-independent" do
+      # The drift verdict must come from the repo's COMMITTED .gitignore files
+      # only: a developer's personal excludes (.git/info/exclude or a global
+      # core.excludesFile) would otherwise flip the warning per machine — and
+      # its "the ignore entry is in place" guidance would be a lie (the repo
+      # has no entry). Here only info/exclude ignores the tracked file: the
+      # report must stay quiet on the tailwind drift.
+      build_skeleton
+      write(sources_path, "/* tracked; ignored only by a personal exclude */\n")
+      system("git", "-C", destination, "init", "-q")
+      system("git", "-C", destination, "add", sources_path)
+      FileUtils.mkdir_p(File.join(destination, ".git/info"))
+      File.write(File.join(destination, ".git/info/exclude"), "#{sources_path}\n")
+
+      report = DocsKit::Generators::SyncReport.new(destination)
+
+      expect(report.items.join).not_to include("git rm --cached")
+    end
+
+    it "does NOT warn when the site is not a git repository" do
+      build_skeleton
+      write(sources_path, "/* generated locally, no repo */\n")
+
+      output = capture_generator(sync: true)
+
+      expect(output).not_to include("git rm --cached")
+    end
+  end
+
   # Version-aware sync: the generator records which docs-kit version a site was
   # last synced at (a `# docs-kit synced: vX.Y.Z` stamp in the initializer) so a
   # future `--sync` can run the ORDERED migrations between that version and the
