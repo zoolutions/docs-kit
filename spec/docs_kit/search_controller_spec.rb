@@ -8,7 +8,7 @@
 # Rails autoloads DocsKit::SearchController from, and that it wires the index +
 # the html/json seams the way the JS-off form and the palette need. The
 # end-to-end request behavior is dogfooded against the docs/ app (see the PR).
-# rubocop:disable RSpec/DescribeClass -- the class is Rails-only, can't constantize here
+# rubocop:disable-next RSpec/DescribeClass -- the class is Rails-only, can't constantize here
 RSpec.describe "DocsKit::SearchController (source wiring)" do
   let(:path) do
     File.expand_path("../../app/controllers/docs_kit/search_controller.rb", __dir__)
@@ -70,4 +70,3 @@ RSpec.describe "DocsKit::SearchController (source wiring)" do
     expect(source).to include("include DocsKit::Scoping")
   end
 end
-# rubocop:enable RSpec/DescribeClass

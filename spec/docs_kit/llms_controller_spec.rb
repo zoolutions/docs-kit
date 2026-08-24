@@ -6,7 +6,7 @@
 # will autoload DocsKit::LlmsController from, and that the thin controller wires
 # the builder + the Rails seams the way #full needs. The end-to-end constant
 # load + request behavior is dogfooded against the docs/ app (see the PR).
-# rubocop:disable RSpec/DescribeClass -- the class is Rails-only, can't constantize here
+# rubocop:disable-next RSpec/DescribeClass -- the class is Rails-only, can't constantize here
 RSpec.describe "DocsKit::LlmsController (source wiring)" do
   # app/controllers/docs_kit/llms_controller.rb → DocsKit::LlmsController under
   # Rails' default inflector (docs_kit → DocsKit, llms_controller → LlmsController).
@@ -57,4 +57,3 @@ RSpec.describe "DocsKit::LlmsController (source wiring)" do
     expect(source).to include("include DocsKit::Scoping")
   end
 end
-# rubocop:enable RSpec/DescribeClass
