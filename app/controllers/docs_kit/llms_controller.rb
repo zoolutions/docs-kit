@@ -29,6 +29,11 @@ module DocsKit
     # GET-only, sessionless, public text endpoints (no token to verify).
     protect_from_forgery with: :null_session
 
+    # Every action runs in the request's version scope (params[:version] on the
+    # version-prefixed routes, else the current version), so the enumeration
+    # below serves the version the URL asked for.
+    include DocsKit::Scoping
+
     def index
       body = DocsKit::LlmsText.index(docs_config, base_url: request.base_url)
       render_text(body) if stale_llms?(body)
@@ -67,9 +72,11 @@ module DocsKit
     # A page's Markdown twin, rendered through this controller's view context so
     # url helpers/CSRF resolve and relative links absolutize to portable URLs —
     # the same path DocsKit::Controller#render_page takes for a `.md` request.
+    # renderable_for is the live-or-snapshot shim (a snapshot entry renders an
+    # ArchivedPage carrying its frozen Markdown).
     def render_page_markdown(page)
       DocsKit::MarkdownExport.new(
-        page.view_class.new, view_context:, base_url: request.base_url
+        DocsKit::LlmsText.renderable_for(page), view_context:, base_url: request.base_url
       ).to_md
     end
   end

@@ -222,4 +222,28 @@ RSpec.describe DocsKit::Registry do
       end.to raise_error(DocsKit::Registry::Error, /cannot mix/i)
     end
   end
+
+  describe "Entry#renderable" do
+    it "instantiates the authored view class (the seam snapshot entries share)" do
+      authored = Class.new do
+        extend DocsKit::Registry
+
+        view_namespace "DocsKit"
+        page "Configuration", group: "Guide" # → DocsKit::Configuration (exists)
+      end
+
+      expect(authored.from_slug("configuration").renderable).to be_a(DocsKit::Configuration)
+    end
+
+    it "is nil for an unauthored page (no resolvable view_class)" do
+      unwritten = Class.new do
+        extend DocsKit::Registry
+
+        view_namespace "DocsKit"
+        page "Installation", group: "Guide" # DocsKit::Installation does not exist
+      end
+
+      expect(unwritten.from_slug("installation").renderable).to be_nil
+    end
+  end
 end

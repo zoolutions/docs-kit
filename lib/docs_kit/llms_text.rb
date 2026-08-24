@@ -54,11 +54,38 @@ module DocsKit
       end
     end
 
-    # The authored pages across every registry, in config/registry order — each
-    # responds to #title / #href / #view_class. The controller renders these to
-    # Markdown for .full.
-    def pages(config)
+    # The authored pages for one version of the docs, in config/registry order —
+    # each responds to #title / #href / #view_class (render via .renderable_for).
+    # This is the ONE enumeration seam every AI surface funnels through, so
+    # making IT version-aware makes llms-full.txt, search, and MCP follow the
+    # request's version for free.
+    #
+    # version: nil resolves through DocsKit::Scope (set per request by the
+    # controllers), then config.current_version — so an unversioned site, or the
+    # current version, enumerates the live registries exactly as before. An
+    # ARCHIVED version enumerates its Markdown snapshot instead
+    # (DocsKit::Snapshot — every entry is authored by definition).
+    def pages(config, version: nil)
+      version ||= DocsKit::Scope.version || config.current_version
+      return snapshot_pages(config, version) if version&.archived?
+
       config.nav_registries.values.flat_map { |registry| registry.all.select(&:view_class) }
+    end
+
+    # An archived version's pages, from its committed snapshot. Every entry has
+    # a view_class by construction; the select keeps the authored-pages contract
+    # symmetric with the live branch.
+    def snapshot_pages(config, version)
+      DocsKit::Snapshot.for(version, config: config).all.select(&:view_class)
+    end
+
+    # The Phlex renderable for a page returned by .pages: the page's own
+    # #renderable (Registry v2 Entry, Snapshot::Entry) with a backwards-
+    # compatible fallback to view_class.new for a site's custom `entries`-style
+    # registry class that predates #renderable. The ONE shim — the controllers
+    # and MCP tools all call this rather than repeating the respond_to? check.
+    def renderable_for(page)
+      page.respond_to?(:renderable) ? page.renderable : page.view_class.new
     end
 
     # The llms-full.txt body: each [title, markdown] pair as `# {title}` + body,

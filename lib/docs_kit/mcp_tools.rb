@@ -87,8 +87,9 @@ module DocsKit
 
     # A page's GFM Markdown twin, rendered through the view context so url helpers
     # and relative-link absolutization resolve — the LlmsController#full seam.
+    # renderable_for is the live-or-snapshot shim (see LlmsText.renderable_for).
     def render_markdown(page, base_url:, view_context:)
-      MarkdownExport.new(page.view_class.new, view_context:, base_url:).to_md
+      MarkdownExport.new(LlmsText.renderable_for(page), view_context:, base_url:).to_md
     end
 
     # A DocsKit::SearchIndex over every authored page's twin — the same triples

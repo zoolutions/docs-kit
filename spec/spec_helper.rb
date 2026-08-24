@@ -7,11 +7,11 @@
 require "simplecov"
 SimpleCov.start do
   enable_coverage :branch
-  add_filter "/spec/"
-  add_group "Config", "lib/docs_kit/configuration.rb"
-  add_group "Registry", "lib/docs_kit/registry.rb"
-  add_group "Components", "app/components"
-  add_group "Generators", "lib/generators"
+  skip "/spec/"
+  group "Config", "lib/docs_kit/configuration.rb"
+  group "Registry", "lib/docs_kit/registry.rb"
+  group "Components", "app/components"
+  group "Generators", "lib/generators"
   minimum_coverage 80
 end
 

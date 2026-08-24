@@ -1,14 +1,14 @@
 # docs-kit
 
-[![CI](https://github.com/mhenrixon/docs-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/mhenrixon/docs-kit/actions/workflows/ci.yml)
+[![CI](https://github.com/zoolutions/docs-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/zoolutions/docs-kit/actions/workflows/ci.yml)
 
 Shared [Phlex](https://www.phlex.fun) chrome for documentation sites built on
 [daisyUI](https://daisyui.com). Extract the shell, sidebar, code blocks, theme
 switcher, and page kit into one gem so multiple docs sites look identical and are
 maintained in one place.
 
-Reactive demos ([phlex-reactive](https://github.com/mhenrixon/phlex-reactive))
-and Postgres-SSE transport ([pgbus](https://github.com/mhenrixon/pgbus)) are
+Reactive demos ([phlex-reactive](https://github.com/zoolutions/phlex-reactive))
+and Postgres-SSE transport ([pgbus](https://github.com/zoolutions/pgbus)) are
 **optional, runtime-detected** add-ons — docs-kit does not depend on them.
 
 ## What you get
@@ -845,7 +845,7 @@ back to a spec.
 
 ```bash
 docs-kit new my-docs                       # → a complete, deployable docs app
-docs-kit new my-docs --image mhenrixon/my-repo --service my-repo
+docs-kit new my-docs --image zoolutions/my-repo --service my-repo
 ```
 
 `docs-kit new` runs `rails new` (propshaft + importmap + turbo/stimulus, no DB)
@@ -917,9 +917,9 @@ on:
   workflow_dispatch:
 jobs:
   deploy:
-    uses: mhenrixon/docs-kit/.github/workflows/deploy.yml@main
+    uses: zoolutions/docs-kit/.github/workflows/deploy.yml@main
     with:
-      image: mhenrixon/<repo>     # OWNER/REPO — see naming note below
+      image: zoolutions/<repo>     # OWNER/REPO — see naming note below
       service: <repo>
     secrets: inherit
 ```
@@ -928,7 +928,7 @@ jobs:
 
 ```yaml
 service: <repo>
-image: mhenrixon/<repo>
+image: zoolutions/<repo>
 registry: { server: ghcr.io, username: mhenrixon, password: [KAMAL_REGISTRY_PASSWORD] }
 builder: { arch: amd64, context: .., dockerfile: Dockerfile }   # repo root = build context
 proxy:   { host: <%= ENV["DEPLOY_DOMAIN"] %>, app_port: 3000, ssl: false, healthcheck: { path: /up } }
@@ -949,7 +949,7 @@ LABEL service="<repo>"
 `GITHUB_TOKEN` — no PAT.)
 
 > **Naming — use the repo name, not `<repo>-docs`.** `image`/`service` must be
-> the calling repo's `OWNER/REPO`. Pushing `ghcr.io/mhenrixon/<repo>` from the
+> the calling repo's `OWNER/REPO`. Pushing `ghcr.io/zoolutions/<repo>` from the
 > repo's own Actions run auto-links the package to the repo, so `GITHUB_TOKEN`
 > can both push (build job) and pull (deploy) it. A different name becomes an
 > unlinked user-scoped package `GITHUB_TOKEN` can't pull → the deploy fails.
@@ -1080,7 +1080,7 @@ them:
    → your profile → *Trusted Publishers* → *Create*, add a **pending** publisher
    (works for a gem not yet pushed) with:
    - Gem name: `docs-kit`
-   - Repository: `mhenrixon/docs-kit`
+   - Repository: `zoolutions/docs-kit`
    - Workflow filename: `release.yml`
    - Environment: `rubygems`
 2. **GitHub `rubygems` environment.** Repo *Settings → Environments → New

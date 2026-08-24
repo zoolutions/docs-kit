@@ -78,7 +78,7 @@ module Views
                 plain "Build and deploy live "
                 strong { "once" }
                 plain " in "
-                code { "mhenrixon/docs-kit/.github/workflows/deploy.yml" }
+                code { "zoolutions/docs-kit/.github/workflows/deploy.yml" }
                 plain ". Each site's "
                 code { ".github/workflows/deploy-docs.yml" }
                 plain " is a thin caller — no build logic is copied per site."
@@ -95,7 +95,7 @@ module Views
 
               jobs:
                 deploy:
-                  uses: mhenrixon/docs-kit/.github/workflows/deploy.yml@main
+                  uses: zoolutions/docs-kit/.github/workflows/deploy.yml@main
                   with:
                     image: OWNER/REPO
                     service: my-repo

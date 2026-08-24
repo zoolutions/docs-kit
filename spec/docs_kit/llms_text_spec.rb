@@ -213,4 +213,80 @@ RSpec.describe DocsKit::LlmsText do
       expect(described_class.full(configure, [])).to eq("")
     end
   end
+
+  describe ".renderable_for" do
+    it "uses #renderable when the page provides it (Registry v2, snapshot entries)" do
+      page = Struct.new(:renderable).new(:the_renderable)
+
+      expect(described_class.renderable_for(page)).to eq(:the_renderable)
+    end
+
+    it "falls back to view_class.new for a custom registry entry predating #renderable" do
+      view = Class.new
+      page = Struct.new(:view_class).new(view)
+
+      expect(described_class.renderable_for(page)).to be_a(view)
+    end
+  end
+
+  describe ".pages with configured versions" do
+    let(:fixtures_root) { File.expand_path("../fixtures/snapshots", __dir__) }
+    let(:live_view) { Class.new }
+
+    before { DocsKit::Snapshot.reset_cache! }
+
+    def versioned_config
+      live = registry(
+        nav_items: {},
+        all: [entry(title: "Live", href: "/docs/live", view_class: live_view)]
+      )
+      config = configure(nav_registries: { "Docs" => live })
+      DocsKit.configure do |c|
+        c.snapshots_path = fixtures_root
+        c.versions = [{ id: "1.1", current: true }, { id: "1.0" }]
+      end
+      config
+    end
+
+    it "enumerates the snapshot for an archived version argument" do
+      config = versioned_config
+
+      pages = described_class.pages(config, version: config.version("1.0"))
+
+      expect(pages.map(&:slug)).to eq(%w[installation configuration])
+      expect(pages.map(&:href)).to all(start_with("/1.0/docs/"))
+    end
+
+    it "keeps the live enumeration for the current version" do
+      config = versioned_config
+
+      pages = described_class.pages(config, version: config.version("1.1"))
+
+      expect(pages.map(&:title)).to eq(%w[Live])
+    end
+
+    it "consults DocsKit::Scope when no version argument is given" do
+      config = versioned_config
+
+      DocsKit::Scope.with(version: config.version("1.0")) do
+        expect(described_class.pages(config).map(&:slug)).to eq(%w[installation configuration])
+      end
+    end
+
+    it "keeps the live enumeration with no scope and no argument" do
+      config = versioned_config
+
+      expect(described_class.pages(config).map(&:title)).to eq(%w[Live])
+    end
+
+    it "is unchanged on an unversioned site (the backwards-compat pin)" do
+      live = registry(
+        nav_items: {},
+        all: [entry(title: "Live", href: "/docs/live", view_class: live_view)]
+      )
+      config = configure(nav_registries: { "Docs" => live })
+
+      expect(described_class.pages(config).map(&:title)).to eq(%w[Live])
+    end
+  end
 end

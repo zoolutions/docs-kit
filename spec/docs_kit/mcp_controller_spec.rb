@@ -7,7 +7,7 @@
 # against the docs/ app. Here we prove the SHIPPED FILE is where Rails autoloads
 # DocsKit::McpController from, and that the thin controller wires the server, the
 # CSRF/optional-gem gates, and the read-only method policy correctly.
-# rubocop:disable RSpec/DescribeClass -- the class is Rails-only, can't constantize here
+# rubocop:disable-next RSpec/DescribeClass -- the class is Rails-only, can't constantize here
 RSpec.describe "DocsKit::McpController (source wiring)" do
   # app/controllers/docs_kit/mcp_controller.rb → DocsKit::McpController under
   # Rails' default inflector, the same path/loader story as LlmsController.
@@ -57,5 +57,8 @@ RSpec.describe "DocsKit::McpController (source wiring)" do
     expect(source).not_to match(/^\s*def config\b/)
     expect(source).to include("def docs_config = DocsKit.configuration")
   end
+
+  it "wraps every action in the request's version scope (DocsKit::Scoping)" do
+    expect(source).to include("include DocsKit::Scoping")
+  end
 end
-# rubocop:enable RSpec/DescribeClass

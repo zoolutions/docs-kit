@@ -649,4 +649,194 @@ RSpec.describe DocsKit::Configuration do
         .to raise_error(DocsKit::Error, /c\.openapi/)
     end
   end
+
+  describe "#versions" do
+    it "defaults to [] (an unversioned site is byte-identical to before)" do
+      expect(described_class.new.versions).to eq([])
+    end
+
+    it "normalizes configured Hashes into DocVersion value objects" do
+      DocsKit.configure do |c|
+        c.versions = [
+          { id: "1.1", current: true },
+          { "id" => "1.0", "ref" => "v1.0.0" }
+        ]
+      end
+
+      versions = DocsKit.configuration.versions
+      expect(versions).to all(be_a(DocsKit::DocVersion))
+      expect(versions.map(&:id)).to eq(%w[1.1 1.0])
+      expect(versions.last.ref).to eq("v1.0.0")
+    end
+
+    it "passes DocVersion instances through unchanged" do
+      version = DocsKit::DocVersion.new(id: "1.0")
+      DocsKit.configure { |c| c.versions = [version] }
+
+      expect(DocsKit.configuration.versions).to eq([version])
+    end
+
+    it "coerces a nil assignment back to an empty array" do
+      DocsKit.configure { |c| c.versions = nil }
+
+      expect(DocsKit.configuration.versions).to eq([])
+    end
+  end
+
+  describe "#versioning_enabled?" do
+    it "is false by default (the backwards-compat pin)" do
+      expect(described_class.new.versioning_enabled?).to be(false)
+    end
+
+    it "is false with a single configured version (no switcher for one entry)" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.0", current: true }] }
+
+      expect(DocsKit.configuration.versioning_enabled?).to be(false)
+    end
+
+    it "is true with two or more versions" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }, { id: "1.0" }] }
+
+      expect(DocsKit.configuration.versioning_enabled?).to be(true)
+    end
+  end
+
+  describe "#current_version" do
+    it "is nil when no versions are configured" do
+      expect(described_class.new.current_version).to be_nil
+    end
+
+    it "is the entry marked current: true" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.0" }, { id: "1.1", current: true }] }
+
+      expect(DocsKit.configuration.current_version.id).to eq("1.1")
+    end
+
+    it "falls back to the first entry when none is marked current" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1" }, { id: "1.0" }] }
+
+      expect(DocsKit.configuration.current_version.id).to eq("1.1")
+    end
+  end
+
+  describe "#version" do
+    it "looks an entry up by id" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }, { id: "1.0" }] }
+
+      expect(DocsKit.configuration.version("1.0").id).to eq("1.0")
+    end
+
+    it "is nil for an unknown id" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }] }
+
+      expect(DocsKit.configuration.version("9.9")).to be_nil
+    end
+
+    it "is nil for nil (no version param on the request)" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }] }
+
+      expect(DocsKit.configuration.version(nil)).to be_nil
+    end
+  end
+
+  describe "#resolve_version" do
+    it "resolves a known id" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }, { id: "1.0" }] }
+
+      expect(DocsKit.configuration.resolve_version("1.0").id).to eq("1.0")
+    end
+
+    it "falls back to the current version for an unknown or missing id" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1", current: true }, { id: "1.0" }] }
+
+      expect(DocsKit.configuration.resolve_version("9.9").id).to eq("1.1")
+      expect(DocsKit.configuration.resolve_version(nil).id).to eq("1.1")
+    end
+
+    it "is nil on an unversioned site" do
+      expect(described_class.new.resolve_version(nil)).to be_nil
+    end
+  end
+
+  describe "#nav_groups under a version scope" do
+    let(:fixtures_root) { File.expand_path("../fixtures/snapshots", __dir__) }
+    let(:live_registry) do
+      Class.new do
+        def self.nav_items
+          { "Guide" => [DocsKit::NavItem.new(href: "/docs/live", label: "Live")] }
+        end
+      end
+    end
+
+    before do
+      DocsKit::Snapshot.reset_cache!
+      DocsKit.configure do |c|
+        c.snapshots_path = fixtures_root
+        c.versions = [{ id: "1.1", current: true }, { id: "1.0" }]
+        c.nav_registries = { "Live docs" => live_registry }
+      end
+    end
+
+    it "derives the sidebar from the snapshot for an archived version in scope" do
+      DocsKit::Scope.with(version: DocsKit.configuration.version("1.0")) do
+        groups = DocsKit.configuration.nav_groups
+
+        expect(groups.keys).to eq(["Docs"])
+        expect(groups["Docs"]["Getting started"].map(&:href))
+          .to all(start_with("/1.0/docs/"))
+      end
+    end
+
+    it "behaves exactly as today for the current version in scope" do
+      DocsKit::Scope.with(version: DocsKit.configuration.version("1.1")) do
+        expect(DocsKit.configuration.nav_groups.keys).to eq(["Live docs"])
+      end
+    end
+
+    it "behaves exactly as today with no scope (the backwards-compat pin)" do
+      expect(DocsKit.configuration.nav_groups.keys).to eq(["Live docs"])
+    end
+  end
+
+  describe "#repo_url" do
+    it "defaults to nil" do
+      expect(described_class.new.repo_url).to be_nil
+    end
+  end
+
+  describe "#snapshots_path" do
+    it "defaults to nil outside Rails (no Rails.root to resolve against)" do
+      expect(described_class.new.snapshots_path).to be_nil
+    end
+
+    it "returns the configured path verbatim" do
+      DocsKit.configure { |c| c.snapshots_path = "/srv/app/docs_snapshots" }
+
+      expect(DocsKit.configuration.snapshots_path).to eq("/srv/app/docs_snapshots")
+    end
+  end
+
+  describe "#compare_url" do
+    let(:from) { DocsKit::DocVersion.new(id: "1.0", ref: "v1.0.0") }
+    let(:to) { DocsKit::DocVersion.new(id: "1.1", ref: "v1.1.0", current: true) }
+
+    it "builds a GitHub compare URL from repo_url and the two refs" do
+      DocsKit.configure { |c| c.repo_url = "https://github.com/me/repo/" }
+
+      expect(DocsKit.configuration.compare_url(from, to))
+        .to eq("https://github.com/me/repo/compare/v1.0.0...v1.1.0")
+    end
+
+    it "is nil without repo_url" do
+      expect(described_class.new.compare_url(from, to)).to be_nil
+    end
+
+    it "is nil when either side has no ref" do
+      DocsKit.configure { |c| c.repo_url = "https://github.com/me/repo" }
+      refless = DocsKit::DocVersion.new(id: "0.9")
+
+      expect(DocsKit.configuration.compare_url(refless, to)).to be_nil
+      expect(DocsKit.configuration.compare_url(from, refless)).to be_nil
+    end
+  end
 end

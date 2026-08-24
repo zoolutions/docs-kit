@@ -17,7 +17,7 @@ Rails.application.config.to_prepare do
     # A link to the source repo in the topbar (next to the theme switcher),
     # rendered with the shipped GitHub brand mark. Dogfoods c.topbar_links.
     c.topbar_links = [
-      { href: "https://github.com/mhenrixon/docs-kit", label: "GitHub", icon: :github }
+      { href: "https://github.com/zoolutions/docs-kit", label: "GitHub", icon: :github }
     ]
 
     # SEO + social sharing, dogfooded. docs-kit emits the full <head> (description,
@@ -74,7 +74,7 @@ Rails.application.config.to_prepare do
     c.landing.ctas = [
       { label: "Get started",      href: "/docs/overview",   style: :primary },
       { label: "Browse components", href: "/docs/components", style: :ghost },
-      { label: "GitHub", href: "https://github.com/mhenrixon/docs-kit", style: :ghost, icon: :github }
+      { label: "GitHub", href: "https://github.com/zoolutions/docs-kit", style: :ghost, icon: :github }
     ]
     c.landing.features = [
       { icon: "layout-template", title: "One shared shell",

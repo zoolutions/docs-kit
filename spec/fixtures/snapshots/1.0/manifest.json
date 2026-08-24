@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "version": "1.0",
+  "docs_kit_version": "1.0.7",
+  "registries": [
+    {
+      "heading": "Docs",
+      "path_prefix": "/docs",
+      "pages": [
+        {
+          "slug": "installation",
+          "title": "Installation",
+          "group": "Getting started",
+          "icon": null,
+          "file": "installation.md",
+          "digest": "5b2ab41f2bcd8f467a19c157a721f272a1a4e29fbe9daa47ed0c2b47bbd9a84e"
+        },
+        {
+          "slug": "configuration",
+          "title": "Configuration",
+          "group": "Getting started",
+          "icon": "settings",
+          "file": "configuration.md",
+          "digest": "9d2f2f9a1c9a4be2a04b7e29889914a3b0a83239c6a58c58b1a9dbf10c11de07"
+        }
+      ]
+    }
+  ]
+}

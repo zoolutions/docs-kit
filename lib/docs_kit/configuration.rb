@@ -242,6 +242,27 @@ module DocsKit
     # #openapi_document (which memoizes + reloads on file change), never @openapi.
     attr_accessor :openapi
 
+    # The documentation versions this site serves — a list of Hashes
+    # ({ id:, label:, ref:, current:, noindex: }) or DocsKit::DocVersion objects;
+    # #versions normalizes them. Defaults to [] → versioning is off and the site
+    # is byte-identical to before. The `current` entry keeps serving unprefixed
+    # at /docs; every other entry serves a committed Markdown snapshot at
+    # /<id>/docs (see DocsKit::Snapshot). A version id must match v?\d+(\.\d+)*
+    # so the host's static version route constraint recognizes it. Read via
+    # #versions, never @versions.
+    attr_writer :versions
+
+    # The site's source repository root (e.g. "https://github.com/me/repo"),
+    # used for the GitHub compare link between two versions' refs
+    # (#compare_url). Defaults to nil → no compare link renders.
+    attr_accessor :repo_url
+
+    # Where committed version snapshots live. Defaults to nil, which the reader
+    # resolves to Rails.root/"docs_snapshots" under Rails (nil outside Rails —
+    # the standalone suite points at fixtures explicitly). Read via
+    # #snapshots_path, never @snapshots_path.
+    attr_writer :snapshots_path
+
     # The sentinel "no explicit nav" lambda. #nav_groups compares against this
     # identity to decide whether to derive the sidebar from #nav_registries.
     DEFAULT_NAV = -> { {} }
@@ -310,6 +331,9 @@ module DocsKit
       @brand_logo = nil
       @brand_logo_raw = nil
       @topbar_brand = :always
+      @versions = []
+      @repo_url = nil
+      @snapshots_path = nil
     end
 
     # The normalized App Home link (a DocsKit::TopbarLink), or nil when unset —
@@ -336,6 +360,61 @@ module DocsKit
     # the Shell only ever sees value objects. Blank/nil config yields [].
     def topbar_links
       Array(@topbar_links).map { |link| DocsKit::TopbarLink.from(link) }
+    end
+
+    # The normalized version list (DocsKit::DocVersion list), in declaration
+    # order. Each configured Hash/DocVersion is coerced via DocVersion.from, so
+    # the switcher and the snapshot reader only ever see value objects.
+    # Blank/nil config yields [].
+    def versions
+      Array(@versions).map { |version| DocsKit::DocVersion.from(version) }
+    end
+
+    # The version serving unprefixed at /docs: the entry marked current: true,
+    # else the first configured entry, else nil (an unversioned site).
+    def current_version
+      versions.find(&:current?) || versions.first
+    end
+
+    # The configured version with this id, or nil when unknown (or nil id).
+    def version(id)
+      return if id.nil?
+
+      versions.find { |version| version.id.to_s == id.to_s }
+    end
+
+    # The version a request's :version param resolves to: the strict #version
+    # lookup, falling back to #current_version for an unknown or missing id —
+    # one rule shared by DocsKit::Controller#render_page and the gem's own
+    # controllers (DocsKit::Scoping), so a bad param degrades to the current
+    # docs instead of 500ing.
+    def resolve_version(id)
+      version(id) || current_version
+    end
+
+    # Whether the version chrome (switcher, llms.txt Versions block) renders.
+    # A single configured version is not worth a switcher, so this needs two —
+    # and an unconfigured site stays byte-identical to before.
+    def versioning_enabled?
+      versions.size > 1
+    end
+
+    # The resolved snapshots directory: the configured value verbatim, else
+    # Rails.root/"docs_snapshots" under Rails, else nil (no Rails, no default —
+    # the standalone suite passes explicit paths).
+    def snapshots_path
+      return @snapshots_path if @snapshots_path
+
+      Rails.root.join("docs_snapshots") if defined?(Rails) && Rails.respond_to?(:root) && Rails.root
+    end
+
+    # The GitHub compare URL between two versions' refs
+    # ("{repo_url}/compare/{from.ref}...{to.ref}"), or nil unless #repo_url and
+    # BOTH refs are present — absent value, absent link, never a broken one.
+    def compare_url(from, to)
+      return if repo_url.nil? || from&.ref.nil? || to&.ref.nil?
+
+      "#{repo_url.chomp('/')}/compare/#{from.ref}...#{to.ref}"
     end
 
     # The SEO / social-share knobs (DocsKit::SeoConfig), read by DocsUI::MetaTags.
@@ -502,11 +581,17 @@ module DocsKit
 
     # The resolved nav Hash for this request. Always returns a Hash.
     #
-    # An explicit #nav lambda wins. Otherwise the sidebar derives from
-    # #nav_registries: each heading maps to its registry's .nav_items, and a
-    # heading whose pages are all unauthored (empty nav_items) is dropped so no
-    # empty group renders.
+    # An ARCHIVED version in DocsKit::Scope wins outright: the sidebar derives
+    # from that version's snapshot manifest (hrefs already version-prefixed), so
+    # an archived page never links into the live docs — even a site's explicit
+    # #nav lambda describes the live pages, not the frozen ones. With no scope
+    # (or the current version) nothing changes: an explicit #nav lambda wins,
+    # else the sidebar derives from #nav_registries — each heading maps to its
+    # registry's .nav_items, and a heading whose pages are all unauthored
+    # (empty nav_items) is dropped so no empty group renders.
     def nav_groups
+      scope_version = DocsKit::Scope.version
+      return DocsKit::Snapshot.for(scope_version, config: self).nav_groups if scope_version&.archived?
       return nav_groups_from_registries unless @nav_explicit
 
       result = @nav.respond_to?(:call) ? @nav.call : @nav

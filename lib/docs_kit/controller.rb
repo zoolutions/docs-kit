@@ -19,10 +19,19 @@ module DocsKit
     # from the SAME render (DocsKit::MarkdownExport walks the rendered HTML). So
     # `GET /docs/x.md` is faithful GFM of exactly what `/docs/x` shows — the
     # author writes nothing extra, and the two never drift.
+    #
+    # The render runs inside the request's DocsKit::Scope (the version resolved
+    # from params[:version], falling back to the current version), so the
+    # sidebar/meta tags/enumeration all see the version the URL asked for.
+    # `render` renders synchronously inside the action, so this block wrapper is
+    # sufficient — no around_action, no host code changes. On an unversioned
+    # site the scope is nil: today's behavior exactly.
     def render_page(view)
-      return render_markdown(view) if markdown_request?
+      DocsKit::Scope.with(version: DocsKit.configuration.resolve_version(params[:version])) do
+        return render_markdown(view) if markdown_request?
 
-      render view, layout: false
+        render view, layout: false
+      end
     end
 
     private

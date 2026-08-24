@@ -31,6 +31,10 @@ module DocsKit
     # protection outright.
     skip_forgery_protection
 
+    # MCP tool calls run in the request's version scope; the version-aware tool
+    # arguments (issue #61 phase 6) layer per-call resolution on top of this.
+    include DocsKit::Scoping
+
     def create
       return head(:not_found) unless docs_config.mcp_enabled?
 

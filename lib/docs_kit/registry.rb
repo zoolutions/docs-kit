@@ -147,6 +147,13 @@ module DocsKit
 
         "#{@view_namespace}::#{@view_name}".safe_constantize
       end
+
+      # The renderable instance for this page (nil when unauthored) — the seam
+      # DocsKit::Snapshot::Entry shares, so consumers render live pages and
+      # snapshot pages identically (see LlmsText.renderable_for).
+      def renderable
+        view_class&.new
+      end
     end
   end
 end

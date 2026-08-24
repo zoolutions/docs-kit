@@ -4,7 +4,7 @@
 # docs-kit CLI. One command scaffolds a complete, deployable docs site:
 #
 #   docs-kit new my-docs
-#   docs-kit new my-docs --image mhenrixon/my-repo --service my-repo
+#   docs-kit new my-docs --image zoolutions/my-repo --service my-repo
 #
 # It runs `rails new` with the right minimal flags and applies docs-kit's
 # application template (lib/docs_kit/templates/new_site.rb), which adds the gem,
@@ -25,7 +25,7 @@ unless command == "new"
       docs-kit new NAME [--image OWNER/REPO] [--service NAME] [--gem-source SRC]
 
     Options:
-      --image     GHCR image (default mhenrixon/NAME) — use OWNER/REPO for the
+      --image     GHCR image (default zoolutions/NAME) — use OWNER/REPO for the
                   repo-linked package so GITHUB_TOKEN can push+pull it.
       --service   Kamal service name (default NAME).
       --gem-source  How to depend on docs-kit: 'released' (default),
@@ -58,7 +58,7 @@ gem_source =
 
 env = {
   "DOCS_KIT_GEM_SOURCE" => gem_source,
-  "DOCS_KIT_IMAGE" => opts[:image] || "mhenrixon/#{name}",
+  "DOCS_KIT_IMAGE" => opts[:image] || "zoolutions/#{name}",
   "DOCS_KIT_SERVICE" => opts[:service] || name
 }
 

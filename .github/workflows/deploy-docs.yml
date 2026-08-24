@@ -22,8 +22,8 @@ permissions:
 
 jobs:
   deploy:
-    uses: mhenrixon/docs-kit/.github/workflows/deploy.yml@main
+    uses: zoolutions/docs-kit/.github/workflows/deploy.yml@main
     with:
-      image: mhenrixon/docs-kit
+      image: zoolutions/docs-kit
       service: docs-kit
     secrets: inherit

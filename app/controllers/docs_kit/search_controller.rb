@@ -28,6 +28,11 @@ module DocsKit
     # public endpoint.
     protect_from_forgery with: :null_session
 
+    # Search follows the request's version: /1.0/docs/search searches the 1.0
+    # snapshot, /docs/search searches current — the scope swaps the enumeration
+    # source underneath DocsKit::LlmsText.pages.
+    include DocsKit::Scoping
+
     def index
       hits = search_index.search(query)
 
@@ -53,7 +58,7 @@ module DocsKit
     def search_index
       triples = DocsKit::LlmsText.pages(docs_config).map do |page|
         markdown = DocsKit::MarkdownExport.new(
-          page.view_class.new, view_context:, base_url: request.base_url
+          DocsKit::LlmsText.renderable_for(page), view_context:, base_url: request.base_url
         ).to_md
         [page.title, page.href, markdown]
       end

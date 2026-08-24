@@ -20,8 +20,9 @@ module DocsKit
       # yield nothing (whitespace-only text nodes) are dropped so no stray blank
       # lines accumulate.
       def render(node)
-        node.children.filter_map { |child| block(child) }
-                     .reject(&:empty?)
+        node.children
+            .filter_map { |child| block(child) }
+            .reject(&:empty?)
             .join("\n\n")
       end
 
