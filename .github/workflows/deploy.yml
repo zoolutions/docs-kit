@@ -165,7 +165,9 @@ jobs:
       # its docs Gemfile. `dash deploy` (not `bundle exec dash`) then works for
       # every site regardless of its bundle.
       - name: Install dash
-        run: gem install dash
+        # Pinned to the 4.x line: the deploy.yml this workflow deploys sets
+        # `minimum_version: 4.0.0` (dash-proxy identity + host migration).
+        run: gem install dash -v "~> 4.0"
 
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.1
@@ -189,6 +191,18 @@ jobs:
             UserKnownHostsFile /dev/null
           EOF
           chmod 600 ~/.ssh/config
+
+      # A pre-flight the deploy would otherwise discover one failure at a time:
+      # SSH + Docker on the host, registry login, proxy state (incl. the 4.0
+      # kamal-proxy → dash-proxy migration), published ports, readiness gates.
+      - name: Doctor — diagnose deploy readiness
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_DOMAIN: ${{ secrets.DEPLOY_DOMAIN }}
+          DASH_REGISTRY_PASSWORD: ${{ github.token }}
+          KAMAL_REGISTRY_PASSWORD: ${{ github.token }}
+        run: dash doctor
 
       - name: Deploy with dash (image already pushed by the build job)
         working-directory: ${{ inputs.working_directory }}

@@ -58,8 +58,20 @@ after_bundle do
     # dash deploy → the oss-infrastructure server (Cloudflare Tunnel + dash-proxy).
     # service/image = the repo OWNER/REPO so the ghcr package auto-links to the
     # repo and GITHUB_TOKEN can push + pull it (no PAT). See docs-kit's README.
+    # `dash docs` / `dash docs proxy` is the always-current reference for every key.
     service: #{service}
     image: #{image}
+
+    # dash 4 renamed the on-host proxy (kamal-proxy → dash-proxy) and migrates a
+    # host in place; an older CLI must not deploy this config.
+    minimum_version: 4.0.0
+
+    # A stateless docs site never rolls back far — keep the host tidy.
+    retain_containers: 2
+
+    # Status-named pages (public/502.html, 503, 504) the proxy serves in place of
+    # the app's during a deploy gap — paired with `proxy.intercept_errors` below.
+    error_pages_path: public
 
     servers:
       web:
@@ -72,11 +84,45 @@ after_bundle do
     proxy:
       host: <%= ENV["DEPLOY_DOMAIN"] %>
       app_port: 3000
+      # TLS terminates at Cloudflare; the tunnel reaches the proxy over plain HTTP.
       ssl: false
       healthcheck:
         path: /up
         interval: 5
         timeout: 30
+
+      # --- dash-proxy per-app features ------------------------------------------
+      # zstd / br / gzip negotiated at the edge; responses the app already encoded
+      # (Thruster) pass through untouched.
+      compress: true
+
+      # RFC 9111 shared cache. Only responses the app marks `Cache-Control: public,
+      # max-age` are stored (Propshaft assets, /llms*.txt) — HTML carrying a session
+      # cookie is refused by design. `dash proxy cache stats` shows what it holds.
+      cache:
+        enabled: true
+        max_ttl: 300
+
+      # Security headers set once here instead of per app; drop server fingerprints.
+      headers:
+        response:
+          set:
+            X-Content-Type-Options: nosniff
+            Referrer-Policy: strict-origin-when-cross-origin
+          remove:
+            - Server
+            - X-Powered-By
+
+      # Serve public/<status>.html instead of a bare "Bad Gateway" while a
+      # container is swapped or unhealthy.
+      intercept_errors:
+        - 502
+        - 503
+        - 504
+
+      # Keep the health probe out of the request histograms.
+      exclude_metrics_paths:
+        - /up
 
     registry:
       server: ghcr.io
@@ -97,6 +143,12 @@ after_bundle do
         # inlined (no user data at risk). Rotate with `bin/rails secret`.
         SECRET_KEY_BASE: "#{SecureRandom.hex(64)}"
   YAML
+
+  # The status pages `proxy.intercept_errors` serves for a deploy gap — `rails new`
+  # ships 500.html; the proxy looks for the exact status it intercepted.
+  %w[502 503 504].each do |status|
+    create_file "public/#{status}.html", File.read("public/500.html") if File.exist?("public/500.html")
+  end
 
   create_file ".dash/secrets", <<~SH
     # In CI the deploy workflow sets this to the job's GITHUB_TOKEN. Locally,
