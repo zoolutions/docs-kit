@@ -1,4 +1,4 @@
-# Kamal deploy → the oss-infrastructure server (Cloudflare Tunnel + kamal-proxy).
+# dash deploy → the oss-infrastructure server (Cloudflare Tunnel + dash-proxy).
 # service/image = the repo OWNER/REPO so the ghcr package auto-links to the
 # repo and GITHUB_TOKEN can push + pull it (no PAT). See docs-kit's README.
 service: docs-kit
@@ -25,11 +25,11 @@ registry:
   server: ghcr.io
   username: mhenrixon
   password:
-    - KAMAL_REGISTRY_PASSWORD
+    - DASH_REGISTRY_PASSWORD
 
 builder:
   arch: amd64
-  # Run kamal from docs/; the build context is the repo root (..) so the path gem
+  # Run dash from docs/; the build context is the repo root (..) so the path gem
   # `gem "docs-kit", path: ".."` resolves. dockerfile is relative to docs/.
   context: ..
   dockerfile: Dockerfile

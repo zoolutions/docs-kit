@@ -7,7 +7,7 @@
 # `build` stage. Pair it with the shipped .dockerignore so the build context
 # stays small (no node_modules, .git, logs, specs, coverage).
 #
-# Build context is the app root; `docker build .` (Kamal: context: ".").
+# Build context is the app root; `docker build .` (dash: context: ".").
 
 ARG RUBY_VERSION=<%= ruby_version_arg %>
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
@@ -59,9 +59,9 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
 # --- Final stage --------------------------------------------------------------
 FROM base
 
-# Kamal's validate_image greps this label on a --skip-push deploy; it must equal
+# dash's validate_image greps this label on a --skip-push deploy; it must equal
 # `service:` in config/deploy.yml. The reusable deploy workflow also stamps it,
-# but keeping it here means `docker build` alone produces a Kamal-valid image.
+# but keeping it here means `docker build` alone produces a dash-valid image.
 LABEL service="<%= docker_service %>"
 
 # Copy ONLY the built artifacts from the build stage: the installed bundle and
@@ -79,9 +79,9 @@ EXPOSE 3000
 <% if thruster? -%>
 # Thruster fronts Puma (HTTP caching + compression + X-Sendfile). It listens on
 # HTTP_PORT and proxies to Puma on TARGET_PORT (it sets PORT for the child, which
-# config/puma.rb reads). HTTP_PORT MUST be the port traffic is routed to (Kamal's
+# config/puma.rb reads). HTTP_PORT MUST be the port traffic is routed to (dash's
 # `app_port`, the EXPOSE above) — Thruster's default is 80, which the non-root
-# user can't reliably bind AND which kamal-proxy (app_port: 3000) would never
+# user can't reliably bind AND which dash-proxy (app_port: 3000) would never
 # route to, silently bypassing Thruster straight into Puma.
 ENV HTTP_PORT="3000" \
     TARGET_PORT="3001"

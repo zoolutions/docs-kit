@@ -137,7 +137,7 @@ fronts Puma with Thruster (`CMD ["./bin/thrust", "./bin/rails", "server"]`) for
 HTTP caching, compression, and X-Sendfile — and the generator scaffolds the
 `bin/thrust` binstub if the app lacks one, since the exec-form CMD needs the
 file to exist in the image. Thruster listens on the routed port
-(`HTTP_PORT=3000` — Kamal's `app_port`) and proxies to Puma on `TARGET_PORT=3001`.
+(`HTTP_PORT=3000` — dash's `app_port`) and proxies to Puma on `TARGET_PORT=3001`.
 Without thruster in the *production* bundle (absent, or only in a
 development/test group that `BUNDLE_WITHOUT` excludes) the CMD falls back to
 plain `rails server` — never a thrust CMD that would crash at boot.
@@ -701,7 +701,7 @@ claude mcp add --transport http docs https://your-docs.example/mcp
 
 and can ask Claude to search or read your docs, which now appear as tools. The
 JSON-RPC is stateless (each `POST` is independent — no SSE session), so it works
-behind the existing Kamal/Cloudflare deploy unchanged; `GET`/`DELETE` return
+behind the existing dash/Cloudflare deploy unchanged; `GET`/`DELETE` return
 `405`. When enabled, `/llms.txt` grows a final `## MCP` line advertising the
 endpoint so agents discover it.
 
@@ -854,7 +854,7 @@ and applies docs-kit's application template, which:
 - runs `rails g docs_kit:install` (initializers, controllers, a Doc registry, a
   sample guide page, the Bun/Tailwind build, the docs-nav Stimulus wiring),
 - syncs the lucide icons and builds the CSS,
-- scaffolds Kamal (`config/deploy.yml`, `.kamal/secrets`, an optimized
+- scaffolds dash (`config/deploy.yml`, `.dash/secrets`, an optimized
   multi-stage `Dockerfile` + a `.dockerignore`) and a thin
   `.github/workflows/deploy-docs.yml` that calls the reusable workflow.
 
@@ -905,7 +905,7 @@ group. Then `bundle exec rubocop` runs the docs-kit cops.
 The build + deploy is defined **once** in this gem's reusable workflow
 (`.github/workflows/deploy.yml`). `docs-kit new` scaffolds the caller for you; to
 wire it by hand a site adds five small things and it deploys to the
-oss-infrastructure server (Kamal + GHCR + Cloudflare Tunnel).
+oss-infrastructure server (dash + GHCR + Cloudflare Tunnel).
 
 **1. A thin caller** — `.github/workflows/deploy-docs.yml`:
 
@@ -928,7 +928,7 @@ jobs:
 ```yaml
 service: <repo>
 image: zoolutions/<repo>
-registry: { server: ghcr.io, username: mhenrixon, password: [KAMAL_REGISTRY_PASSWORD] }
+registry: { server: ghcr.io, username: mhenrixon, password: [DASH_REGISTRY_PASSWORD] }
 builder: { arch: amd64, context: .., dockerfile: Dockerfile }   # repo root = build context
 proxy:   { host: <%= ENV["DEPLOY_DOMAIN"] %>, app_port: 3000, ssl: false, healthcheck: { path: /up } }
 servers: { web: { hosts: [<%= ENV["DEPLOY_HOST"] %>] } }
@@ -941,7 +941,7 @@ ssh:     { user: oss }
 LABEL service="<repo>"
 ```
 
-**4. `docs/.kamal/secrets`** — `KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD`.
+**4. `docs/.dash/secrets`** — `DASH_REGISTRY_PASSWORD=$DASH_REGISTRY_PASSWORD`.
 
 **5. GitHub** — a `docs` environment with secrets `SSH_PRIVATE_KEY`,
 `DEPLOY_HOST`, `DEPLOY_DOMAIN`. (The registry password is the auto-provided
@@ -953,9 +953,9 @@ LABEL service="<repo>"
 > can both push (build job) and pull (deploy) it. A different name becomes an
 > unlinked user-scoped package `GITHUB_TOKEN` can't pull → the deploy fails.
 
-**First deploy per host:** run `kamal setup` (or `bin/deploy setup`) once to boot
+**First deploy per host:** run `dash setup` (or `bin/deploy setup`) once to boot
 any accessories (e.g. a Postgres accessory); the release workflow runs plain
-`kamal deploy`, which doesn't boot accessories.
+`dash deploy`, which doesn't boot accessories.
 
 ## CSS — the canonical build
 

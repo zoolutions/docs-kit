@@ -7,7 +7,7 @@ module Views
         title "Deploy"
         eyebrow "Reference"
 
-        def lead = "One reusable workflow deploys every docs-kit site to Kamal + GHCR."
+        def lead = "One reusable workflow deploys every docs-kit site to dash + GHCR."
 
         def content
           DocsUI::Section("Scaffolded for you") do
@@ -16,7 +16,7 @@ module Views
                 plain "The CLI writes the whole deploy: "
                 code { "config/deploy.yml" }
                 plain ", "
-                code { ".kamal/secrets" }
+                code { ".dash/secrets" }
                 plain ", a "
                 code { "Dockerfile" }
                 plain ", and a "
@@ -122,16 +122,16 @@ module Views
             DocsUI::Callout(:warning) do
               plain "A name that doesn't match the repo becomes an unlinked package that "
               code { "GITHUB_TOKEN" }
-              plain " can't pull — the deploy fails when Kamal tries to fetch the image."
+              plain " can't pull — the deploy fails when dash tries to fetch the image."
             end
           end
 
           DocsUI::Section("Secrets") do
             render DocsUI::PropTable.new(
               [
-                [ "SSH_PRIVATE_KEY", "Deploy key for the Kamal SSH user." ],
+                [ "SSH_PRIVATE_KEY", "Deploy key for the dash SSH user." ],
                 [ "DEPLOY_HOST", "The deploy host (IP or DNS)." ],
-                [ "DEPLOY_DOMAIN", "The public host kamal-proxy routes." ]
+                [ "DEPLOY_DOMAIN", "The public host dash-proxy routes." ]
               ],
               headers: [ "Secret", "Purpose" ]
             )
@@ -152,7 +152,7 @@ module Views
             DocsUI::Callout(:warning) do
               plain "The caller workflow MUST grant "
               code { "permissions: packages: write" }
-              plain " itself — a reusable workflow can't escalate its caller's permissions. Without it the deploy fails at startup, before any Kamal step runs."
+              plain " itself — a reusable workflow can't escalate its caller's permissions. Without it the deploy fails at startup, before any dash step runs."
             end
           end
         end

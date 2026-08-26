@@ -240,11 +240,11 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
         expect(read("Dockerfile")).to include(%(CMD ["./bin/thrust", "./bin/rails", "server"]))
       end
 
-      it "pins HTTP_PORT to 3000 (kamal-proxy's app_port; non-root can't rely on 80)" do
+      it "pins HTTP_PORT to 3000 (dash-proxy's app_port; non-root can't rely on 80)" do
         dockerfile = read("Dockerfile")
 
         # Thruster's default HTTP_PORT is 80: as USER 1000 the bind can fail, and
-        # kamal-proxy routes to app_port 3000 — which would hit Puma directly and
+        # dash-proxy routes to app_port 3000 — which would hit Puma directly and
         # silently bypass Thruster. HTTP_PORT=3000 keeps Thruster on the routed
         # port; TARGET_PORT moves Puma out of the way.
         expect(dockerfile).to match(/HTTP_PORT="?3000"?/)

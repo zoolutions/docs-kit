@@ -8,7 +8,7 @@
 #
 # It runs `rails new` with the right minimal flags and applies docs-kit's
 # application template (lib/docs_kit/templates/new_site.rb), which adds the gem,
-# runs `docs_kit:install`, syncs icons, builds the CSS, and scaffolds Kamal +
+# runs `docs_kit:install`, syncs icons, builds the CSS, and scaffolds dash +
 # the reusable deploy workflow.
 
 require "optparse"
@@ -27,7 +27,7 @@ unless command == "new"
     Options:
       --image     GHCR image (default zoolutions/NAME) — use OWNER/REPO for the
                   repo-linked package so GITHUB_TOKEN can push+pull it.
-      --service   Kamal service name (default NAME).
+      --service   dash service name (default NAME).
       --gem-source  How to depend on docs-kit: 'released' (default),
                   'path:PATH', or 'github:OWNER/REPO'.
   USAGE

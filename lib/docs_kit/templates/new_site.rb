@@ -14,7 +14,7 @@ require "securerandom"
 #   * adds docs-kit + its runtime deps to the Gemfile,
 #   * runs `docs_kit:install` (all the Ruby/CSS/Stimulus wiring),
 #   * syncs the lucide icon set and builds the CSS,
-#   * scaffolds a deployable Kamal setup that calls docs-kit's reusable workflow.
+#   * scaffolds a deployable dash setup that calls docs-kit's reusable workflow.
 #
 # The generated app is a complete, deployable standalone docs site.
 
@@ -53,9 +53,9 @@ after_bundle do
   run "bun install --silent" if system("command -v bun >/dev/null 2>&1")
   run "bun run build:css" if system("command -v bun >/dev/null 2>&1")
 
-  # --- deploy scaffolding (Kamal + the reusable workflow) ---------------------
+  # --- deploy scaffolding (dash + the reusable workflow) ---------------------
   create_file "config/deploy.yml", <<~YAML
-    # Kamal deploy → the oss-infrastructure server (Cloudflare Tunnel + kamal-proxy).
+    # dash deploy → the oss-infrastructure server (Cloudflare Tunnel + dash-proxy).
     # service/image = the repo OWNER/REPO so the ghcr package auto-links to the
     # repo and GITHUB_TOKEN can push + pull it (no PAT). See docs-kit's README.
     service: #{service}
@@ -82,7 +82,7 @@ after_bundle do
       server: ghcr.io
       username: mhenrixon
       password:
-        - KAMAL_REGISTRY_PASSWORD
+        - DASH_REGISTRY_PASSWORD
 
     builder:
       arch: amd64
@@ -98,18 +98,18 @@ after_bundle do
         SECRET_KEY_BASE: "#{SecureRandom.hex(64)}"
   YAML
 
-  create_file ".kamal/secrets", <<~SH
+  create_file ".dash/secrets", <<~SH
     # In CI the deploy workflow sets this to the job's GITHUB_TOKEN. Locally,
-    # export it (e.g. KAMAL_REGISTRY_PASSWORD=$(gh auth token)).
-    KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+    # export it (e.g. DASH_REGISTRY_PASSWORD=$(gh auth token)).
+    DASH_REGISTRY_PASSWORD=$DASH_REGISTRY_PASSWORD
   SH
 
   # The Dockerfile + .dockerignore are written by `docs_kit:install` (run above in
   # after_bundle) so a scaffolded site and an upgrading site share ONE optimized,
   # version-stamped Dockerfile — no divergent copy to maintain here. The generator
   # derives the LABEL service from the app dir basename (= app_name); if the site
-  # deploys under a DIFFERENT Kamal service (`--service`), correct the label to
-  # match config/deploy.yml so Kamal's --skip-push validate_image passes.
+  # deploys under a DIFFERENT dash service (`--service`), correct the label to
+  # match config/deploy.yml so dash's --skip-push validate_image passes.
   gsub_file "Dockerfile", /LABEL service=".*"/, %(LABEL service="#{service}") if service != app_name
 
   create_file ".github/workflows/deploy-docs.yml", <<~YAML

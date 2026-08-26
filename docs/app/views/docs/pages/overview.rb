@@ -117,7 +117,7 @@ module Views
                 and `--sync` runs only the additive wiring to upgrade an existing
                 site without touching your pages. See [Installation](/docs/installation).
               - **`docs-kit new` + a single reusable deploy workflow** — scaffold a
-                whole site, then ship it with Kamal + GHCR. See [Deploy](/docs/deploy).
+                whole site, then ship it with dash + GHCR. See [Deploy](/docs/deploy).
             MD
           end
         end
