@@ -7,7 +7,7 @@ module Views
         title "Deploy"
         eyebrow "Reference"
 
-        def lead = "One reusable workflow deploys every docs-kit site to Kamal + GHCR."
+        def lead = "One reusable workflow deploys every docs-kit site to dash + GHCR."
 
         def content
           DocsUI::Section("Scaffolded for you") do
@@ -16,7 +16,7 @@ module Views
                 plain "The CLI writes the whole deploy: "
                 code { "config/deploy.yml" }
                 plain ", "
-                code { ".kamal/secrets" }
+                code { ".dash/secrets" }
                 plain ", a "
                 code { "Dockerfile" }
                 plain ", and a "
@@ -72,6 +72,78 @@ module Views
             SHELL
           end
 
+          DocsUI::Section("dash-proxy, switched on", description: "The scaffolded deploy.yml uses the proxy, not just the router.") do
+            prose do
+              p do
+                plain "Every site deploys with "
+                a(href: "https://github.com/zoolutions/dash") { "dash" }
+                plain " 4 ("
+                code { "minimum_version: 4.0.0" }
+                plain ") and turns on the per-app dash-proxy features a docs site benefits from — no per-site tuning, the template writes them:"
+              end
+              ul do
+                li do
+                  code { "compress: true" }
+                  plain " — zstd / brotli / gzip negotiated at the edge; Thruster-encoded responses pass through."
+                end
+                li do
+                  code { "cache: { enabled: true, max_ttl: 300 }" }
+                  plain " — an RFC 9111 shared cache. It stores only responses marked "
+                  code { "Cache-Control: public" }
+                  plain " (Propshaft assets, "
+                  code { "/llms.txt" }
+                  plain "); HTML carrying a session cookie is refused by design. "
+                  code { "dash proxy cache stats" }
+                  plain " shows what it holds."
+                end
+                li do
+                  code { "headers" }
+                  plain " — "
+                  code { "X-Content-Type-Options" }
+                  plain " / "
+                  code { "Referrer-Policy" }
+                  plain " set once at the proxy; "
+                  code { "Server" }
+                  plain " and "
+                  code { "X-Powered-By" }
+                  plain " stripped."
+                end
+                li do
+                  code { "intercept_errors: [502, 503, 504]" }
+                  plain " + "
+                  code { "error_pages_path: public" }
+                  plain " — the site's own status pages during a container swap, not a bare \"Bad Gateway\"."
+                end
+                li do
+                  code { "exclude_metrics_paths: [/up]" }
+                  plain " — the health probe stays out of the request histograms."
+                end
+              end
+              p do
+                plain "Deliberately left alone: "
+                code { "proxy.run" }
+                plain " is host-wide (every site on the shared host boots the same proxy; a differing "
+                code { "run:" }
+                plain " block reboots it on each alternate deploy), and "
+                code { "rate_limit" }
+                plain " / "
+                code { "deny_ips" }
+                plain " need "
+                code { "client_ip.trusted_proxies" }
+                plain " pinned to the tunnel's address to key on visitors rather than on cloudflared. "
+                code { "dash docs proxy" }
+                plain " is the always-current reference."
+              end
+              p do
+                plain "The first dash 4 deploy on a host renames the proxy ("
+                code { "kamal-proxy" }
+                plain " → "
+                code { "dash-proxy" }
+                plain ") and copies its config volume — one short outage on that host while ports 80/443 change hands, paid once by whichever site deploys first."
+              end
+            end
+          end
+
           DocsUI::Section("The reusable workflow") do
             prose do
               p do
@@ -122,16 +194,18 @@ module Views
             DocsUI::Callout(:warning) do
               plain "A name that doesn't match the repo becomes an unlinked package that "
               code { "GITHUB_TOKEN" }
-              plain " can't pull — the deploy fails when Kamal tries to fetch the image."
+              plain " can't pull — the deploy fails when dash tries to fetch the image. Before deploying, the workflow runs "
+                code { "dash doctor" }
+                plain ", a pre-flight of host, registry, proxy, ports and readiness gates that fails the job early with one report instead of one failure at a time."
             end
           end
 
           DocsUI::Section("Secrets") do
             render DocsUI::PropTable.new(
               [
-                [ "SSH_PRIVATE_KEY", "Deploy key for the Kamal SSH user." ],
+                [ "SSH_PRIVATE_KEY", "Deploy key for the dash SSH user." ],
                 [ "DEPLOY_HOST", "The deploy host (IP or DNS)." ],
-                [ "DEPLOY_DOMAIN", "The public host kamal-proxy routes." ]
+                [ "DEPLOY_DOMAIN", "The public host dash-proxy routes." ]
               ],
               headers: [ "Secret", "Purpose" ]
             )
@@ -152,7 +226,7 @@ module Views
             DocsUI::Callout(:warning) do
               plain "The caller workflow MUST grant "
               code { "permissions: packages: write" }
-              plain " itself — a reusable workflow can't escalate its caller's permissions. Without it the deploy fails at startup, before any Kamal step runs."
+              plain " itself — a reusable workflow can't escalate its caller's permissions. Without it the deploy fails at startup, before any dash step runs."
             end
           end
         end

@@ -105,7 +105,7 @@ Look for:
 Look for:
 - Gem build errors: missing files in gemspec, syntax errors
 - Bundle install failures: dependency conflicts
-- Deploy workflow: Docker build context, Kamal image/service name mismatch, missing `docs` environment secret
+- Deploy workflow: Docker build context, dash image/service name mismatch, missing `docs` environment secret
 
 ---
 
@@ -132,7 +132,7 @@ bundle exec rake
 
 1. **Lint/style fixes** first (fast, deterministic)
 2. **Spec failures** second (may require understanding the code change)
-3. **Build/deploy issues** third (usually gemspec, dependency, or a Kamal name mismatch)
+3. **Build/deploy issues** third (usually gemspec, dependency, or a dash name mismatch)
 
 ---
 
@@ -171,7 +171,7 @@ If you can identify that certain failures will persist for environmental reasons
 - **Read before fixing** -- always read the actual failing code before attempting a fix
 - **Fix the root cause** -- don't add `# rubocop:disable` to bypass lint; fix the actual issue (a targeted `# rubocop:disable` is acceptable only when RuboCop is demonstrably wrong)
 - **Don't fix unrelated failures** -- if a spec was already failing on main, note it but don't fix it in this PR
-- **Deploy vs. test failures** -- the `Deploy docs` workflow only fires on a release/dispatch; a normal PR usually runs lint + specs. A deploy failure is often a Kamal image/service name or missing-secret issue, not a code bug (see the README deploy section).
+- **Deploy vs. test failures** -- the `Deploy docs` workflow only fires on a release/dispatch; a normal PR usually runs lint + specs. A deploy failure is often a dash image/service name or missing-secret issue, not a code bug (see the README deploy section).
 - **Flaky tests** -- if a test passes locally but fails in CI, note it as potentially flaky rather than adding workarounds.
 - **Don't retry CI blindly** -- diagnose first, fix, then push. Each push triggers a full CI run.
 

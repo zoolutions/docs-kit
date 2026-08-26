@@ -20,7 +20,7 @@ RPC of its own — the threat model centers on **HTML output correctness**
 - Reviewing how config values (brand, nav labels, hrefs, themes) reach the DOM
 - Reviewing `#render_page` and the `layout: false` full-document render
 - Auditing files the install generator / `docs-kit new` template writes into a site
-- Reviewing the reusable deploy workflow + Kamal secrets scaffolding
+- Reviewing the reusable deploy workflow + dash secrets scaffolding
 
 ## Key Security Concerns
 
@@ -74,8 +74,8 @@ a(href: item.href) { item.label }   # label escaped; href is an attribute (Phlex
 
 ```ruby
 # The install generator / `docs-kit new` template writes initializers, a
-# Dockerfile, deploy.yml, .kamal/secrets into a consuming site.
-# GOOD: secrets are referenced from ENV ($KAMAL_REGISTRY_PASSWORD), never inlined;
+# Dockerfile, deploy.yml, .dash/secrets into a consuming site.
+# GOOD: secrets are referenced from ENV ($DASH_REGISTRY_PASSWORD), never inlined;
 #   the scaffold enables the host app's normal protections.
 # BAD: a generated file that hardcodes a credential, disables CSRF/host auth
 #   wholesale, or ships a master.key / credentials into the repo.

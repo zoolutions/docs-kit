@@ -568,7 +568,7 @@ module DocsKit
         (name || File.basename(destination_root)).to_s.underscore.humanize
       end
 
-      # The Kamal `service` name stamped as the Dockerfile's LABEL — the app dir
+      # The dash `service` name stamped as the Dockerfile's LABEL — the app dir
       # basename (a docs site's repo name), matching the `docs-kit new` default.
       # Used in Dockerfile.tt via <%= docker_service %>.
       def docker_service

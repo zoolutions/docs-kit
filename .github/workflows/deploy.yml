@@ -1,6 +1,6 @@
 # Reusable docs-site deploy: build the Docker image, push to GHCR, and deploy
-# with Kamal to the oss-infrastructure server (behind a Cloudflare Tunnel +
-# kamal-proxy). Every docs-kit site calls this so the deploy is defined ONCE.
+# with dash to the oss-infrastructure server (behind a Cloudflare Tunnel +
+# dash-proxy). Every docs-kit site calls this so the deploy is defined ONCE.
 #
 # A site's own .github/workflows/deploy-docs.yml is a thin caller:
 #
@@ -11,7 +11,7 @@
 #         image: zoolutions/my-docs
 #       secrets: inherit
 #
-# The image is built once (buildx, registry cache) and Kamal deploys it with
+# The image is built once (buildx, registry cache) and dash deploys it with
 # --skip-push, so the image is never built twice.
 name: Reusable docs deploy
 
@@ -29,14 +29,14 @@ on:
         type: string
       service:
         description: >-
-          The Kamal service name (must equal `service:` in config/deploy.yml).
-          Stamped as the `service` image LABEL so Kamal's validate_image passes
+          The dash service name (must equal `service:` in config/deploy.yml).
+          Stamped as the `service` image LABEL so dash's validate_image passes
           on the --skip-push deploy — the image is built here (docker/build-push-action),
-          not by `kamal build`, so Kamal never injects the label itself.
+          not by `dash build`, so dash never injects the label itself.
         required: true
         type: string
       ruby_version:
-        description: "Ruby for the Kamal CLI."
+        description: "Ruby for the dash CLI."
         required: false
         default: "3.4"
         type: string
@@ -68,13 +68,13 @@ on:
     # agent step errors if SSH_PRIVATE_KEY is missing.
     secrets:
       SSH_PRIVATE_KEY:
-        description: "Deploy key for the Kamal SSH user on the deploy host."
+        description: "Deploy key for the dash SSH user on the deploy host."
         required: false
       DEPLOY_HOST:
         description: "The deploy host (IP or DNS) — consumed by config/deploy.yml."
         required: false
       DEPLOY_DOMAIN:
-        description: "The public host kamal-proxy routes — consumed by config/deploy.yml."
+        description: "The public host dash-proxy routes — consumed by config/deploy.yml."
         required: false
 
 concurrency:
@@ -136,9 +136,9 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ inputs.image }}:${{ steps.tag.outputs.image_tag }}
             ${{ inputs.registry }}/${{ inputs.image }}:latest
-          # Kamal's validate_image greps for this `service` label on the
+          # dash's validate_image greps for this `service` label on the
           # --skip-push deploy; since the image is built here and not by
-          # `kamal build`, we must stamp it ourselves.
+          # `dash build`, we must stamp it ourselves.
           labels: |
             service=${{ inputs.service }}
           cache-from: type=registry,ref=${{ inputs.registry }}/${{ inputs.image }}:buildcache
@@ -148,7 +148,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: docs
-    # Pull-only (kamal deploy --skip-push); no image push, so packages: read.
+    # Pull-only (dash deploy --skip-push); no image push, so packages: read.
     permissions:
       contents: read
       packages: read
@@ -161,11 +161,13 @@ jobs:
         with:
           ruby-version: ${{ inputs.ruby_version }}
 
-      # Install the Kamal CLI directly so a consuming site doesn't need `kamal` in
-      # its docs Gemfile. `kamal deploy` (not `bundle exec kamal`) then works for
+      # Install the dash CLI directly so a consuming site doesn't need `dash` in
+      # its docs Gemfile. `dash deploy` (not `bundle exec dash`) then works for
       # every site regardless of its bundle.
-      - name: Install Kamal
-        run: gem install kamal
+      - name: Install dash
+        # Pinned to the 4.x line: the deploy.yml this workflow deploys sets
+        # `minimum_version: 4.0.0` (dash-proxy identity + host migration).
+        run: gem install dash -v "~> 4.0"
 
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.1
@@ -178,7 +180,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Disable host-key verification for the deploy host. Kamal uses net-ssh,
+          # Disable host-key verification for the deploy host. dash uses net-ssh,
           # which raises HostKeyMismatch on any known_hosts conflict (e.g. after
           # the server is reprovisioned). net-ssh honors ~/.ssh/config, so this
           # turns verification off for this single known IP. Acceptable here: a
@@ -190,22 +192,36 @@ jobs:
           EOF
           chmod 600 ~/.ssh/config
 
-      - name: Deploy with Kamal (image already pushed by the build job)
+      # A pre-flight the deploy would otherwise discover one failure at a time:
+      # SSH + Docker on the host, registry login, proxy state (incl. the 4.0
+      # kamal-proxy → dash-proxy migration), published ports, readiness gates.
+      - name: Doctor — diagnose deploy readiness
         working-directory: ${{ inputs.working_directory }}
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_DOMAIN: ${{ secrets.DEPLOY_DOMAIN }}
+          DASH_REGISTRY_PASSWORD: ${{ github.token }}
+          KAMAL_REGISTRY_PASSWORD: ${{ github.token }}
+        run: dash doctor
+
+      - name: Deploy with dash (image already pushed by the build job)
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_DOMAIN: ${{ secrets.DEPLOY_DOMAIN }}
+          DASH_REGISTRY_PASSWORD: ${{ github.token }}
+          # Legacy twin: a site still on a scaffolded .kamal/secrets reads this name.
           KAMAL_REGISTRY_PASSWORD: ${{ github.token }}
           IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
         run: |
           # DEPLOY_HOST/DEPLOY_DOMAIN are `docs`-environment secrets that only
           # reach this job because the deploy job sets `environment: docs` AND the
           # caller sets `secrets: inherit`. If either is dropped they resolve to ""
-          # with no error and Kamal would deploy against an empty host — fail fast.
+          # with no error and dash would deploy against an empty host — fail fast.
           if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_DOMAIN" ]; then
             echo "::error::DEPLOY_HOST/DEPLOY_DOMAIN empty — is the caller's 'secrets: inherit' set and does the deploy job keep 'environment: docs'?"
             exit 1
           fi
-          kamal deploy \
+          dash deploy \
             --skip-push \
             --version="$IMAGE_TAG"

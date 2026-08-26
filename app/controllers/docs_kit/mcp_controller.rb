@@ -15,7 +15,7 @@ module DocsKit
   # DocsKit::McpServer / DocsKit::McpTools.
   #
   # Stateless JSON-RPC: each POST is independent (no SSE session), so it works
-  # behind the existing Kamal/Cloudflare deploy unchanged. #create delegates the
+  # behind the existing dash/Cloudflare deploy unchanged. #create delegates the
   # whole protocol to DocsKit::McpServer#handle_json — the SDK parses the request,
   # dispatches the tool, and serializes the response (including JSON-RPC errors),
   # so the controller never hand-rolls the protocol.

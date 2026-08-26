@@ -71,7 +71,7 @@ Layer 2: Registry + values  lib/docs_kit/registry.rb (in-memory docs registry mi
 Layer 1: Config + controller lib/docs_kit/configuration.rb (per-site knobs), lib/docs_kit/controller.rb (#render_page)
 Layer 0: Core + engine      lib/docs_kit.rb, lib/docs_kit/engine.rb (auto-pins docs-nav, mounts the controller assets)
          Install path        lib/generators/docs_kit/install/ (install generator + templates), lib/docs_kit/templates/new_site.rb, exe/docs-kit (docs-kit new)
-         Deploy              .github/workflows/deploy.yml (reusable), deploy-docs.yml (thin caller); Kamal + GHCR + Cloudflare Tunnel
+         Deploy              .github/workflows/deploy.yml (reusable), deploy-docs.yml (thin caller); dash + GHCR + Cloudflare Tunnel
 ```
 
 ## The mental model

@@ -34,7 +34,7 @@ module Views
               - runs the install generator,
               - syncs the lucide icons,
               - builds the Tailwind CSS, and
-              - scaffolds the Kamal deploy.
+              - scaffolds the dash deploy.
 
               Then boot it:
             MD

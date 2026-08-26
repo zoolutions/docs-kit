@@ -14,7 +14,7 @@ require "securerandom"
 #   * adds docs-kit + its runtime deps to the Gemfile,
 #   * runs `docs_kit:install` (all the Ruby/CSS/Stimulus wiring),
 #   * syncs the lucide icon set and builds the CSS,
-#   * scaffolds a deployable Kamal setup that calls docs-kit's reusable workflow.
+#   * scaffolds a deployable dash setup that calls docs-kit's reusable workflow.
 #
 # The generated app is a complete, deployable standalone docs site.
 
@@ -53,13 +53,25 @@ after_bundle do
   run "bun install --silent" if system("command -v bun >/dev/null 2>&1")
   run "bun run build:css" if system("command -v bun >/dev/null 2>&1")
 
-  # --- deploy scaffolding (Kamal + the reusable workflow) ---------------------
+  # --- deploy scaffolding (dash + the reusable workflow) ---------------------
   create_file "config/deploy.yml", <<~YAML
-    # Kamal deploy → the oss-infrastructure server (Cloudflare Tunnel + kamal-proxy).
+    # dash deploy → the oss-infrastructure server (Cloudflare Tunnel + dash-proxy).
     # service/image = the repo OWNER/REPO so the ghcr package auto-links to the
     # repo and GITHUB_TOKEN can push + pull it (no PAT). See docs-kit's README.
+    # `dash docs` / `dash docs proxy` is the always-current reference for every key.
     service: #{service}
     image: #{image}
+
+    # dash 4 renamed the on-host proxy (kamal-proxy → dash-proxy) and migrates a
+    # host in place; an older CLI must not deploy this config.
+    minimum_version: 4.0.0
+
+    # A stateless docs site never rolls back far — keep the host tidy.
+    retain_containers: 2
+
+    # Status-named pages (public/502.html, 503, 504) the proxy serves in place of
+    # the app's during a deploy gap — paired with `proxy.intercept_errors` below.
+    error_pages_path: public
 
     servers:
       web:
@@ -72,17 +84,51 @@ after_bundle do
     proxy:
       host: <%= ENV["DEPLOY_DOMAIN"] %>
       app_port: 3000
+      # TLS terminates at Cloudflare; the tunnel reaches the proxy over plain HTTP.
       ssl: false
       healthcheck:
         path: /up
         interval: 5
         timeout: 30
 
+      # --- dash-proxy per-app features ------------------------------------------
+      # zstd / br / gzip negotiated at the edge; responses the app already encoded
+      # (Thruster) pass through untouched.
+      compress: true
+
+      # RFC 9111 shared cache. Only responses the app marks `Cache-Control: public,
+      # max-age` are stored (Propshaft assets, /llms*.txt) — HTML carrying a session
+      # cookie is refused by design. `dash proxy cache stats` shows what it holds.
+      cache:
+        enabled: true
+        max_ttl: 300
+
+      # Security headers set once here instead of per app; drop server fingerprints.
+      headers:
+        response:
+          set:
+            X-Content-Type-Options: nosniff
+            Referrer-Policy: strict-origin-when-cross-origin
+          remove:
+            - Server
+            - X-Powered-By
+
+      # Serve public/<status>.html instead of a bare "Bad Gateway" while a
+      # container is swapped or unhealthy.
+      intercept_errors:
+        - 502
+        - 503
+        - 504
+
+      # Keep the health probe out of the request histograms.
+      exclude_metrics_paths:
+        - /up
+
     registry:
       server: ghcr.io
       username: mhenrixon
       password:
-        - KAMAL_REGISTRY_PASSWORD
+        - DASH_REGISTRY_PASSWORD
 
     builder:
       arch: amd64
@@ -98,18 +144,24 @@ after_bundle do
         SECRET_KEY_BASE: "#{SecureRandom.hex(64)}"
   YAML
 
-  create_file ".kamal/secrets", <<~SH
+  # The status pages `proxy.intercept_errors` serves for a deploy gap — `rails new`
+  # ships 500.html; the proxy looks for the exact status it intercepted.
+  %w[502 503 504].each do |status|
+    create_file "public/#{status}.html", File.read("public/500.html") if File.exist?("public/500.html")
+  end
+
+  create_file ".dash/secrets", <<~SH
     # In CI the deploy workflow sets this to the job's GITHUB_TOKEN. Locally,
-    # export it (e.g. KAMAL_REGISTRY_PASSWORD=$(gh auth token)).
-    KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+    # export it (e.g. DASH_REGISTRY_PASSWORD=$(gh auth token)).
+    DASH_REGISTRY_PASSWORD=$DASH_REGISTRY_PASSWORD
   SH
 
   # The Dockerfile + .dockerignore are written by `docs_kit:install` (run above in
   # after_bundle) so a scaffolded site and an upgrading site share ONE optimized,
   # version-stamped Dockerfile — no divergent copy to maintain here. The generator
   # derives the LABEL service from the app dir basename (= app_name); if the site
-  # deploys under a DIFFERENT Kamal service (`--service`), correct the label to
-  # match config/deploy.yml so Kamal's --skip-push validate_image passes.
+  # deploys under a DIFFERENT dash service (`--service`), correct the label to
+  # match config/deploy.yml so dash's --skip-push validate_image passes.
   gsub_file "Dockerfile", /LABEL service=".*"/, %(LABEL service="#{service}") if service != app_name
 
   create_file ".github/workflows/deploy-docs.yml", <<~YAML

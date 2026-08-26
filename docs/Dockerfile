@@ -59,7 +59,7 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
 # --- Final stage --------------------------------------------------------------
 FROM base
 
-# Kamal verifies this label on the --skip-push deploy; must equal `service:` in
+# dash verifies this label on the --skip-push deploy; must equal `service:` in
 # config/deploy.yml (= the repo name, docs-kit).
 LABEL service="docs-kit"
 
@@ -74,9 +74,9 @@ USER 1000:1000
 EXPOSE 3000
 # Thruster fronts Puma (HTTP caching + compression + X-Sendfile). It listens on
 # HTTP_PORT and proxies to Puma on TARGET_PORT (it sets PORT for the child, which
-# config/puma.rb reads). HTTP_PORT MUST be the port traffic is routed to (Kamal's
+# config/puma.rb reads). HTTP_PORT MUST be the port traffic is routed to (dash's
 # `app_port: 3000` in config/deploy.yml, the EXPOSE above) — Thruster's default
-# is 80, which the non-root user can't reliably bind AND which kamal-proxy would
+# is 80, which the non-root user can't reliably bind AND which dash-proxy would
 # never route to, silently bypassing Thruster straight into Puma.
 ENV HTTP_PORT="3000" \
     TARGET_PORT="3001"

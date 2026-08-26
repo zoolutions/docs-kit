@@ -137,7 +137,7 @@ fronts Puma with Thruster (`CMD ["./bin/thrust", "./bin/rails", "server"]`) for
 HTTP caching, compression, and X-Sendfile — and the generator scaffolds the
 `bin/thrust` binstub if the app lacks one, since the exec-form CMD needs the
 file to exist in the image. Thruster listens on the routed port
-(`HTTP_PORT=3000` — Kamal's `app_port`) and proxies to Puma on `TARGET_PORT=3001`.
+(`HTTP_PORT=3000` — dash's `app_port`) and proxies to Puma on `TARGET_PORT=3001`.
 Without thruster in the *production* bundle (absent, or only in a
 development/test group that `BUNDLE_WITHOUT` excludes) the CMD falls back to
 plain `rails server` — never a thrust CMD that would crash at boot.
@@ -701,7 +701,7 @@ claude mcp add --transport http docs https://your-docs.example/mcp
 
 and can ask Claude to search or read your docs, which now appear as tools. The
 JSON-RPC is stateless (each `POST` is independent — no SSE session), so it works
-behind the existing Kamal/Cloudflare deploy unchanged; `GET`/`DELETE` return
+behind the existing dash/Cloudflare deploy unchanged; `GET`/`DELETE` return
 `405`. When enabled, `/llms.txt` grows a final `## MCP` line advertising the
 endpoint so agents discover it.
 
@@ -854,7 +854,7 @@ and applies docs-kit's application template, which:
 - runs `rails g docs_kit:install` (initializers, controllers, a Doc registry, a
   sample guide page, the Bun/Tailwind build, the docs-nav Stimulus wiring),
 - syncs the lucide icons and builds the CSS,
-- scaffolds Kamal (`config/deploy.yml`, `.kamal/secrets`, an optimized
+- scaffolds dash (`config/deploy.yml`, `.dash/secrets`, an optimized
   multi-stage `Dockerfile` + a `.dockerignore`) and a thin
   `.github/workflows/deploy-docs.yml` that calls the reusable workflow.
 
@@ -905,7 +905,7 @@ group. Then `bundle exec rubocop` runs the docs-kit cops.
 The build + deploy is defined **once** in this gem's reusable workflow
 (`.github/workflows/deploy.yml`). `docs-kit new` scaffolds the caller for you; to
 wire it by hand a site adds five small things and it deploys to the
-oss-infrastructure server (Kamal + GHCR + Cloudflare Tunnel).
+oss-infrastructure server (dash + GHCR + Cloudflare Tunnel).
 
 **1. A thin caller** — `.github/workflows/deploy-docs.yml`:
 
@@ -923,17 +923,38 @@ jobs:
     secrets: inherit
 ```
 
-**2. `docs/config/deploy.yml`** — `service:` and `image:` MUST match the caller:
+**2. `docs/config/deploy.yml`** — `service:` and `image:` MUST match the caller
+(the full file `docs-kit new` writes is in `lib/docs_kit/templates/new_site.rb`;
+`dash docs proxy` documents every key):
 
 ```yaml
 service: <repo>
 image: zoolutions/<repo>
-registry: { server: ghcr.io, username: mhenrixon, password: [KAMAL_REGISTRY_PASSWORD] }
+minimum_version: 4.0.0        # dash 4: dash-proxy identity + in-place host migration
+retain_containers: 2
+error_pages_path: public      # 502/503/504.html served during a deploy gap
+registry: { server: ghcr.io, username: mhenrixon, password: [DASH_REGISTRY_PASSWORD] }
 builder: { arch: amd64, context: .., dockerfile: Dockerfile }   # repo root = build context
-proxy:   { host: <%= ENV["DEPLOY_DOMAIN"] %>, app_port: 3000, ssl: false, healthcheck: { path: /up } }
 servers: { web: { hosts: [<%= ENV["DEPLOY_HOST"] %>] } }
 ssh:     { user: oss }
+proxy:
+  host: <%= ENV["DEPLOY_DOMAIN"] %>
+  app_port: 3000
+  ssl: false                  # TLS terminates at Cloudflare
+  healthcheck: { path: /up, interval: 5, timeout: 30 }
+  compress: true              # zstd/br/gzip at the edge
+  cache: { enabled: true, max_ttl: 300 }   # stores `Cache-Control: public` responses (assets, /llms*.txt)
+  headers: { response: { set: { X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin }, remove: [Server, X-Powered-By] } }
+  intercept_errors: [502, 503, 504]
+  exclude_metrics_paths: [/up]
 ```
+
+Deliberately **not** set: `proxy.run` (`port_holder`, `log_format`, …) is
+host-wide — every docs site on the shared host boots the same proxy, and a
+`run:` block that differs between them makes each alternate deploy reboot it.
+`rate_limit`/`deny_ips` need `client_ip.trusted_proxies` pinned to the tunnel's
+address to key on visitors rather than on cloudflared; add them per site once
+that address is known.
 
 **3. `docs/Dockerfile`** — end the final stage with the matching label:
 
@@ -941,7 +962,7 @@ ssh:     { user: oss }
 LABEL service="<repo>"
 ```
 
-**4. `docs/.kamal/secrets`** — `KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD`.
+**4. `docs/.dash/secrets`** — `DASH_REGISTRY_PASSWORD=$DASH_REGISTRY_PASSWORD`.
 
 **5. GitHub** — a `docs` environment with secrets `SSH_PRIVATE_KEY`,
 `DEPLOY_HOST`, `DEPLOY_DOMAIN`. (The registry password is the auto-provided
@@ -953,9 +974,15 @@ LABEL service="<repo>"
 > can both push (build job) and pull (deploy) it. A different name becomes an
 > unlinked user-scoped package `GITHUB_TOKEN` can't pull → the deploy fails.
 
-**First deploy per host:** run `kamal setup` (or `bin/deploy setup`) once to boot
-any accessories (e.g. a Postgres accessory); the release workflow runs plain
-`kamal deploy`, which doesn't boot accessories.
+**First deploy per host:** run `dash setup` (or `bin/deploy setup`) once to boot
+any accessories (e.g. a Postgres accessory); the release workflow runs
+`dash doctor` (a pre-flight of host, registry, proxy, ports and readiness gates)
+and then plain `dash deploy`, which doesn't boot accessories.
+
+**Upgrading a host to dash 4:** the first 4.x deploy renames the proxy
+(`kamal-proxy` → `dash-proxy`, network `kamal` → `dash`, config volume copied)
+and costs one short outage on that host while ports 80/443 change hands. It is
+idempotent and shared by every site on the host — whichever deploys first pays it.
 
 ## CSS — the canonical build
 
