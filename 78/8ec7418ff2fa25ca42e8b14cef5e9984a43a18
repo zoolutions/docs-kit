@@ -1,0 +1,9 @@
+lib/docs_kit/version.rb
+  ai_agent 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "788ec7418ff2fa25ca42e8b14cef5e9984a43a18",
+  "prompts": {}
+}
