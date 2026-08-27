@@ -45,6 +45,13 @@ RSpec.describe "DocsKit::LlmsController (source wiring)" do
     expect(source).to include("stale?(etag: [DocsKit::VERSION, body]")
   end
 
+  it "sends a public max-age so a shared cache (dash-proxy, CDN) can store it" do
+    # `public` alone is not storable under RFC 9111 — a shared cache needs a
+    # freshness lifetime. expires_in adds max-age; stale? keeps `public`.
+    expect(source).to include("expires_in LLMS_MAX_AGE, public: true")
+    expect(source).to include("LLMS_MAX_AGE = 300")
+  end
+
   it "does not shadow ActionController::Base#config (forgery delegates to it)" do
     # RequestForgeryProtection delegates allow_forgery_protection to #config, so
     # a `def config` on the controller breaks csrf_meta_tags when #full renders a

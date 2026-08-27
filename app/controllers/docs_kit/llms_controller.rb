@@ -47,6 +47,12 @@ module DocsKit
       render_text(body) if stale_llms?(body)
     end
 
+    # Freshness lifetime for a shared cache (dash-proxy, a CDN). `public` on its
+    # own is not storable under RFC 9111 — without a max-age the proxy cache
+    # skips the response. 300s matches the `proxy.cache.max_ttl` docs-kit
+    # scaffolds; the etag below still revalidates within that window.
+    LLMS_MAX_AGE = 300
+
     private
 
     # NOT named #config — ActionController::Base#config is the Rails config
@@ -66,6 +72,7 @@ module DocsKit
     # busts it) plus the gem version as the etag salt. In development, always
     # re-render; production sites deploy immutably so the version etag is stable.
     def stale_llms?(body)
+      expires_in LLMS_MAX_AGE, public: true
       stale?(etag: [DocsKit::VERSION, body], public: true)
     end
 
