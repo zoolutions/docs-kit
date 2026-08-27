@@ -1,0 +1,23 @@
+app/controllers/docs_kit/llms_controller.rb
+  s_6583dcb787908b::t_7c92489bcf537f 75
+  ai_agent 50-55
+spec/docs_kit/llms_controller_spec.rb
+  ai_agent 52
+  s_6583dcb787908b::t_f368e8dd7e557a 48-51,53-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "28b771bf636498ea2f13c7c7bfc048847ad7fc65",
+  "prompts": {},
+  "sessions": {
+    "s_6583dcb787908b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3fc9e10f-5ce2-4c6f-9888-b208da65d84d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
