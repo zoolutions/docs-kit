@@ -1,0 +1,31 @@
+CHANGELOG.md
+  s_ada0de58648077::t_8ee999dd7dca11 7-12,27-32
+docs/app/views/docs/pages/components.rb
+  s_ada0de58648077::t_8ee999dd7dca11 231-232
+README.md
+  s_ada0de58648077::t_8ee999dd7dca11 436-439
+lib/generators/docs_kit/install/templates/agents_md.erb
+  s_ada0de58648077::t_8ee999dd7dca11 69-71
+app/components/docs_ui/code.rb
+  s_ada0de58648077::t_21d3fae4f843ee 12-13,15-21,29,73-76,78-92
+docs/app/views/docs/pages/authoring.rb
+  s_ada0de58648077::t_8ee999dd7dca11 157
+spec/docs_ui/code_spec.rb
+  s_ada0de58648077::t_0ba6f28ada0a2b 126-160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "968d7712dec563339dc41781574839e0bbbe68a2",
+  "prompts": {},
+  "sessions": {
+    "s_ada0de58648077": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82a8ef39-ab00-416b-a03f-7387b7dba064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
