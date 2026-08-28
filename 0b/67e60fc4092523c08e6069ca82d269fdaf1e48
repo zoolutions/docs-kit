@@ -1,0 +1,21 @@
+lib/generators/docs_kit/page/page_generator.rb
+  s_ada0de58648077::t_21d3fae4f843ee 104-112,116
+spec/generators/page_generator_spec.rb
+  s_ada0de58648077::t_0ba6f28ada0a2b 122-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0b67e60fc4092523c08e6069ca82d269fdaf1e48",
+  "prompts": {},
+  "sessions": {
+    "s_ada0de58648077": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82a8ef39-ab00-416b-a03f-7387b7dba064",
+        "model": "claude-fable-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
