@@ -228,8 +228,8 @@ module Views
             render DocsUI::PropTable.new(
               [
                 [ "source", "String", "—", "The code to highlight." ],
-                [ "lexer", "Symbol", ":ruby", "Any Rouge language — :shell, :yaml, :erb, :python, :go, etc." ],
-                [ "filename", "String, nil", "nil", "Optional filename bar above the block." ]
+                [ "lexer", "Symbol", "inferred", "Any Rouge language — :shell, :yaml, :erb, :python, :go, etc. Overrides the filename guess; ruby when neither is given." ],
+                [ "filename", "String, nil", "nil", "Optional filename bar above the block. Also selects the language (*.yml → yaml, Dockerfile → docker, *.sh → shell)." ]
               ],
               headers: [ "Arg", "Type", "Default", "Description" ]
             )

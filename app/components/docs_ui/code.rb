@@ -9,12 +9,16 @@ module DocsUI
   # stylesheet asset is required.
   #
   #   render DocsUI::Code.new(ruby_source)                          # ruby, no title
-  #   render DocsUI::Code.new(py, lexer: :python, filename: "a.py")  # any language
+  #   render DocsUI::Code.new(yaml, filename: "config/deploy.yml")  # yaml, inferred
+  #   render DocsUI::Code.new(py, lexer: :python, filename: "a.py")  # explicit wins
   #
-  # Any language Rouge knows (~200 lexers) works by its name or alias — python,
-  # go, rust, elixir, kotlin, swift, json, dockerfile, ... — no allowlist. Add
-  # friendly lexer aliases via DocsKit.configure (code_lexer_aliases). An unknown
-  # language falls back to plaintext (never raises). (Tab labels are a
+  # The language resolves in order: an explicit `lexer:`; a guess from the
+  # `filename:` (Rouge's own filename globs — *.yml → yaml, Dockerfile → docker,
+  # *.sh → shell, …); else ruby. Any language Rouge knows (~200 lexers) works by
+  # its name or alias — python, go, rust, elixir, kotlin, swift, json,
+  # dockerfile, ... — no allowlist. Add friendly lexer aliases via
+  # DocsKit.configure (code_lexer_aliases). An unknown language falls back to
+  # plaintext (never raises). (Tab labels are a
   # DocsUI::Example concern — set via code_language_labels, not here; Code has no
   # label, only a filename.)
   class Code < Phlex::HTML
@@ -22,7 +26,7 @@ module DocsUI
 
     FORMATTER = Rouge::Formatters::HTML.new
 
-    def initialize(source, lexer: :ruby, filename: nil)
+    def initialize(source, lexer: nil, filename: nil)
       @source = source.to_s.strip
       @lexer = lexer
       @filename = filename
@@ -66,11 +70,26 @@ module DocsUI
       end
     end
 
-    # Resolve @lexer to a Rouge lexer instance. Order: an explicit Rouge::Lexer
-    # class/instance passed through; a configured friendly alias; Rouge's own
-    # registry (name/alias); then the configured fallback (plaintext).
+    # Resolve the lexer to a Rouge lexer instance. Order: an explicit Rouge::Lexer
+    # class/instance passed through; an explicit name via a configured friendly
+    # alias → Rouge's own registry → the configured fallback (plaintext); with no
+    # `lexer:` given, a guess from the filename; else the ruby default.
     def lexer
-      explicit_lexer || (find_lexer(@lexer.to_s) || Rouge::Lexers::PlainText).new
+      explicit_lexer ||
+        (@lexer && (find_lexer(@lexer.to_s) || Rouge::Lexers::PlainText).new) ||
+        guessed_lexer ||
+        Rouge::Lexers::Ruby.new
+    end
+
+    # A lexer inferred from @filename via Rouge's declared filename globs, or nil
+    # when there is no filename, nothing matches, or the match is ambiguous.
+    # (Lexer.guesses, not Lexer.guess: the latter answers PlainText for a
+    # no-match, which is indistinguishable from a real guess.)
+    def guessed_lexer
+      return nil if @filename.nil?
+
+      guesses = Rouge::Lexer.guesses(filename: @filename.to_s)
+      guesses.size == 1 ? guesses.first.new : nil
     end
 
     # A Rouge::Lexer instance passed directly (class or instance), else nil.

@@ -433,6 +433,10 @@ DocsUI::Section("Add the gem", id: "add", description: …)  # title positional
 DocsUI::Code(source, lexer: :ruby, filename: "Gemfile")   # source positional
 ```
 
+`DocsUI::Code` infers the language from `filename:` (`config/deploy.yml` →
+YAML, `Dockerfile` → docker, `bin/setup.sh` → shell); `lexer:` overrides the
+guess, and with neither the block is highlighted as Ruby.
+
 For the two wrappers that take **no** positional argument — prose and a
 multi-language example — `DocsUI::Page` gives you lowercase helpers so a block
 needs no parens:

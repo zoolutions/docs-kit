@@ -119,6 +119,49 @@ RSpec.describe DocsKit::Generators::PageGenerator do
     end
   end
 
+  describe "a grouped registry (blank lines + comments between page groups)" do
+    # The layout docs_kit:install itself produces: groups of `page` lines
+    # separated by a blank line and a `# comment`. The anchor must be the LAST
+    # page line of the FILE, not the last line of every group.
+    let(:grouped) do
+      <<~RUBY
+        # frozen_string_literal: true
+
+        class Doc
+          extend DocsKit::Registry
+          path_prefix "/docs"
+          view_namespace "Views::Docs::Pages"
+
+          # Guide
+          page "Installation", group: "Guide"
+          page "Configuration", group: "Guide"
+
+          # Deploying
+          page "Docker", group: "Deploying"
+          page "Tunnel", group: "Deploying"
+        end
+      RUBY
+    end
+
+    before { seed_registry(grouped) }
+
+    it "adds exactly one line, after the last page line of the file" do
+      run_generator(["New Page"], { "group" => "Deploying" })
+
+      doc = read("app/models/doc.rb")
+      expect(doc.scan(%(page "New Page")).size).to eq(1)
+      expect(doc.index(%(page "Tunnel"))).to be < doc.index(%(page "New Page"))
+      expect(doc.scan(/^\s*page /).size).to eq(5)
+    end
+
+    it "is idempotent on a second run" do
+      run_generator(["New Page"], { "group" => "Deploying" })
+      run_generator(["New Page"], { "group" => "Deploying", "skip" => true })
+
+      expect(read("app/models/doc.rb").scan(%(page "New Page")).size).to eq(1)
+    end
+  end
+
   describe "flag overrides" do
     before { seed_registry(registry_v2) }
 
