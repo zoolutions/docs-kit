@@ -123,6 +123,41 @@ RSpec.describe DocsUI::Code do
     end
   end
 
+  # `filename:` selects the language when `lexer:` is not given — the natural
+  # `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` highlights as YAML
+  # instead of silently lexing as Ruby.
+  describe "lexer inference from filename:" do
+    it "guesses the lexer from the filename extension" do
+      html = described_class.new("foo: bar\nbaz: [1, 2]", filename: "config/deploy.yml").call
+
+      expect(html).to include('data-md-lang="yaml"')
+      expect(html).not_to include('class="err"')
+    end
+
+    it "guesses from a well-known basename (Dockerfile)" do
+      resolved = described_class.new("FROM ruby", filename: "Dockerfile").send(:lexer)
+      expect(resolved).to be_a(Rouge::Lexers::Docker)
+    end
+
+    it "lets an explicit lexer: win over the filename" do
+      html = described_class.new("puts 'hi'", filename: "x.yml", lexer: :ruby).call
+
+      expect(html).to include('data-md-lang="ruby"')
+    end
+
+    it "falls back to ruby for an unguessable filename" do
+      html = described_class.new("puts 'hi'", filename: "notes").call
+
+      expect(html).to include('data-md-lang="ruby"')
+    end
+
+    it "still defaults to ruby with no filename and no lexer" do
+      html = described_class.new("puts 'hi'").call
+
+      expect(html).to include('data-md-lang="ruby"')
+    end
+  end
+
   it "falls back to plaintext for an unknown lexer" do
     html = described_class.new("anything", lexer: :nope).call
 

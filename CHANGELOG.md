@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- **`docs_kit:page` injected the registry line once per group.** In a registry
+  laid out as blank-line-separated groups (the layout `docs_kit:install`
+  produces), the "page line not followed by a page line" Regexp anchor matched
+  the end of *every* group and Thor's `inject_into_file` replaced every match.
+  The anchor is now the file's last `page` line as a String, so one run adds
+  exactly one line, at the end of the last group.
 - **SEO `og:image` 404.** The og:image tag pointed at the raw config path
   (`https://site/og/og.png`), which isn't a served URL — Propshaft serves the
   digested asset under `/assets`. A relative `og_image` is now resolved through
@@ -18,6 +24,12 @@
 
 ### Added
 
+- **`DocsUI::Code` infers the language from `filename:`.**
+  `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
+  instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename
+  globs (`*.yml` → yaml, `Dockerfile` → docker, `*.sh` → shell, …). An explicit
+  `lexer:` still wins, and a block with neither (or an unguessable filename)
+  stays Ruby, so existing output is unchanged.
 - **`DocsUI::Landing` hero logo (`c.landing.logo`).** The landing hero now takes
   an optional brand mark above the eyebrow, in two forms: an inline single-path
   SVG (`{ svg: "<path d>", viewbox:, label: }`, rendered with `fill: currentColor`

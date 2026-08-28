@@ -154,7 +154,7 @@ module Views
 
             md <<~'MD'
               The primary argument is always positional —
-              `Section("Title")`, `Code(source)`, `Header("Title")` — with
+              `Section("Title")`, `Code(source, filename:)` (the filename picks the language), `Header("Title")` — with
               modifiers as keywords (`description:`, `eyebrow:`).
 
               For the wrappers that take no argument, use the lowercase page
