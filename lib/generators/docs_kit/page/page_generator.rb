@@ -101,13 +101,19 @@ module DocsKit
         source.match?(/^\s*entries\s*\[/) && !source.match?(/^\s*page\s+["']/)
       end
 
-      # Inject after the last existing `page` line so ordering lands at the end
-      # of the group; else after view_namespace/path_prefix; else after the
-      # `extend DocsKit::Registry` line.
+      # Inject after the last existing `page` line of the FILE so ordering lands
+      # at the end of the last group; else after view_namespace/path_prefix;
+      # else after the `extend DocsKit::Registry` line.
+      #
+      # The `page` anchor is the last matching line as a String, not a Regexp:
+      # Thor's inject_into_file replaces EVERY match of a Regexp `after:`, so a
+      # "page line not followed by a page line" pattern fires once per group in
+      # a registry laid out with blank-line-separated groups (the layout
+      # docs_kit:install produces) and duplicates the entry.
       def registry_anchor(source)
         case source
         when /^\s*page\s+["']/
-          /^\s*page .*\n(?!\s*page )/
+          source.lines.grep(/^\s*page\s+["']/).last
         when /^\s*view_namespace\s/
           /^\s*view_namespace .*\n/
         when /^\s*path_prefix\s/
