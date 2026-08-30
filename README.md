@@ -934,7 +934,7 @@ jobs:
 ```yaml
 service: <repo>
 image: zoolutions/<repo>
-minimum_version: 4.0.0        # dash 4: dash-proxy identity + in-place host migration
+minimum_version: 4.0.7        # dash 4.0.7: doctor stale-proxy recovery + registry credential fail-fast
 retain_containers: 2
 error_pages_path: public      # 502/503/504.html served during a deploy gap
 registry: { server: ghcr.io, username: mhenrixon, password: [DASH_REGISTRY_PASSWORD] }

@@ -78,7 +78,7 @@ module Views
                 plain "Every site deploys with "
                 a(href: "https://github.com/zoolutions/dash") { "dash" }
                 plain " 4 ("
-                code { "minimum_version: 4.0.0" }
+                code { "minimum_version: 4.0.7" }
                 plain ") and turns on the per-app dash-proxy features a docs site benefits from — no per-site tuning, the template writes them:"
               end
               ul do
