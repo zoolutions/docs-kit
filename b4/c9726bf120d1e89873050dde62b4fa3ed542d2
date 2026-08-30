@@ -1,0 +1,27 @@
+docs/config/deploy.yml
+  s_0c548ead97ac82::t_60343a4cb2fda3 10
+.github/workflows/deploy.yml
+  s_0c548ead97ac82::t_60343a4cb2fda3 168-171
+docs/app/views/docs/pages/deploy.rb
+  s_0c548ead97ac82::t_60343a4cb2fda3 81
+lib/docs_kit/templates/new_site.rb
+  s_0c548ead97ac82::t_60343a4cb2fda3 67
+README.md
+  s_0c548ead97ac82::t_428dd071462be3 937
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b4c9726bf120d1e89873050dde62b4fa3ed542d2",
+  "prompts": {},
+  "sessions": {
+    "s_0c548ead97ac82": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "331b2a7a-e4ca-4651-b6de-294944f94c8c",
+        "model": "claude-fable-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
