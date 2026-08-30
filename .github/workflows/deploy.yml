@@ -165,9 +165,10 @@ jobs:
       # its docs Gemfile. `dash deploy` (not `bundle exec dash`) then works for
       # every site regardless of its bundle.
       - name: Install dash
-        # Pinned to the 4.x line: the deploy.yml this workflow deploys sets
-        # `minimum_version: 4.0.0` (dash-proxy identity + host migration).
-        run: gem install dash -v "~> 4.0"
+        # Floor at 4.0.7: the deploy.yml this workflow deploys sets
+        # `minimum_version: 4.0.7` (doctor stale-proxy recovery + registry
+        # credential fail-fast, on top of the 4.0 dash-proxy identity).
+        run: gem install dash -v "~> 4.0.7"
 
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.1
