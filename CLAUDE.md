@@ -5,6 +5,15 @@ Shared [Phlex](https://www.phlex.fun) chrome for documentation sites built on
 and page kit extracted into one gem so multiple docs sites look identical and are
 maintained in one place.
 
+## Memory
+
+Durable project memory lives in `lode/` (index: `lode/lode-map.md`). Read it
+before exploring the code. `lode/review/` holds accepted review findings as
+rules about the system; `/lode:gate` enforces them before any push, and
+`/lode:learn` adds to them. `lode/workflow.md` is the profile the shared
+`/lode:` workflow skills read — commands, CI quirks, conflict rules, the
+reviewer suggestions that are wrong here.
+
 ## Tech Stack
 
 - **Ruby**: >= 3.2 | **Rails**: >= 7.1 (engine)
@@ -52,15 +61,24 @@ bun run build:css        # Rebuild the Tailwind/daisyUI CSS (in a consuming site
 
 | Command | Purpose |
 |---------|---------|
-| `/plan` | Fable-powered planning → GitHub issue or `docs/plans/` markdown (read-only; execute with `/lfg`) |
-| `/lfg` | Full autonomous workflow: branch → understand → explore → plan → TDD → verify → PR |
-| `/tdd` | Enforce RED → GREEN → REFACTOR |
+| `/lode:plan` | Read-only planning → a GitHub issue (default) or `lode/plans/` markdown; execute with `/lode:lfg` |
+| `/lode:lfg` | Full autonomous workflow: branch → understand → explore → plan → TDD → verify → gate → PR |
+| `/lode:tdd` | Enforce RED → GREEN → REFACTOR |
+| `/lode:review-pr` | Full PR pass: merge conflicts, then CI failures, then unresolved review comments (in that order) |
+| `/lode:finish-prs` | Drive a stack of open PRs to merge-ready, one at a time |
+| `/lode:debug-flaky` | Root-cause an intermittent failure — evidence → repro → stress-proofed fix; never skip/retry |
+| `/lode:gate` | The pre-PR gate: fresh-context review against the rules and `lode/review/`; the push hook requires it |
+| `/lode:learn` | Write accepted review findings into `lode/review/` |
+| `/lode:sync` | Keep `lode/` true to the code after a change |
 | `/architect` | Coordinate a change across config → registry → components → client → generator → CSS |
 | `/security` | Security audit (HTML escaping, config trust, the render path, generated files, deploy secrets) |
-| `/review-pr` | Review a PR for pattern compliance |
-| `/github-review-pr` | Full PR pass: fix CI failures, then resolve review comments (in that order) |
-| `/github-review-failures` | Fix failing CI checks until green |
-| `/github-review-comments` | Process unresolved PR review comments |
+| `/review-pr` | Review a PR for docs-kit pattern compliance (the repo-specific checklist; `/lode:review-pr` is the full pass) |
+
+The `/lode:` commands come from the `lode@zoolutions` plugin, enabled in
+`.claude/settings.json`. They replace the local `/lfg`, `/plan`, `/tdd`,
+`/github-review-pr`, `/github-review-failures` and `/github-review-comments`
+copies, which this repo no longer ships; `lode/workflow.md` carries the
+repo-specific constraint tables those files used to hold.
 
 ## Architecture
 
@@ -85,13 +103,13 @@ the "on this page" TOC) — there is no server round-trip. See `README.md`.
 
 ## Model tiers (for Claude Code commands & agents)
 
-Commands and agents pin a model **tier** via frontmatter aliases, not a full
-model ID — aliases track the latest model in each tier, so pins never go stale:
+The `/lode:` commands pin their own tiers. The local commands and agents pin a
+model **tier** via frontmatter aliases, not a full model ID — aliases track the latest model in each tier, so pins never go stale:
 
 - `haiku` — mechanical/config work, diff pattern-scans
-- `sonnet` — layer specialists / pattern-following implementation (the default for `/tdd`, the review-comment/failure runbooks)
-- `opus` — orchestration, security, production/PR review (`/lfg`, `/architect`, `/security`, `/review-pr`, `/github-review-pr`)
-- `fable` — pinned only on `/plan` (read-only planning that hands execution to cheaper models); otherwise choose it per-session with `/model` for architecture and the hardest debugging
+- `sonnet` — layer specialists / pattern-following implementation
+- `opus` — orchestration, security, production/PR review (`/architect`, `/security`, `/review-pr`)
+- `fable` — read-only planning that hands execution to cheaper models; otherwise choose it per-session with `/model` for architecture and the hardest debugging
 
 When spawning subagents for mechanical work (file finding, pattern scans), pass a
 cheaper model explicitly (`model: haiku`) rather than letting them inherit the
@@ -117,6 +135,9 @@ the naming note.
 
 ## More Documentation
 
-- `.claude/commands/` — slash command definitions
-- `.claude/rules/` — coding style, git workflow, testing, agents
+- `lode/` — durable project memory; start at `lode/lode-map.md`
+- `lode/workflow.md` — the workflow profile the `/lode:` skills read
+- `.claude/commands/` — the repo-specific slash commands that remain
+- `.claude/rules/` — coding style, git workflow, testing, agents, seo
+- `AGENTS.md` — cross-tool orientation and the page-authoring contract
 - `README.md` — the full install/configure/render/deploy guide

@@ -8,3 +8,5 @@ Gemfile.lock
 .DS_Store
 # Claude Code agent scratch worktrees.
 /.claude/worktrees/
+# Lode scratch for a run in progress.
+/lode/tmp/
