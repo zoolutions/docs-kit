@@ -23,7 +23,7 @@ When spawning subagents for **mechanical** work (file finding, pattern scans,
 naming-convention sweeps), pass a cheaper model explicitly (`model: haiku`)
 rather than letting them inherit the session model. Use `model: sonnet` when a
 subsystem must be read and summarized. Keep the expensive model for judgment in
-the main session. See `CLAUDE.md` for the tier convention.
+the main session. See `.claude/README.md` for the tier convention.
 
 ## Parallel Execution
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Coverage. Start SimpleCov BEFORE requiring docs_kit so every lib/ file loaded
-# below is tracked. CLAUDE.md sets the 80% floor; enforce it here so `rake` fails
+# below is tracked. AGENTS.md sets the 80% floor; enforce it here so `rake` fails
 # locally and in CI when coverage regresses. The generators/ tree is the install
 # generator, exercised by spec/generators/**.
 require "simplecov"
