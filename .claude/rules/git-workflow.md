@@ -52,9 +52,12 @@ All work goes through PRs.
 
 ## Release
 
-Releases go through `rake release[X.Y.Z]` (bumps version, verifies the build,
+Releases go through `bin/release` (the front door to `rake release[X.Y.Z]` in
+`rakelib/release.rake`: bumps version + lockfile pins, verifies the build,
 commits, pushes, creates the GitHub Release). The Release workflow then publishes
-to RubyGems. Never `gem push` by hand.
+to RubyGems. Never `gem push` by hand. `bin/release`, `rakelib/release.rake` and
+the shared jobs of `release.yml` are byte-identical across the zoolutions gems:
+change them in every repo or none.
 
 ## Pre-Commit Checklist
 
@@ -68,7 +71,7 @@ bundle exec rspec     # Suite
 
 - **NEVER** commit directly to `main`
 - **NEVER** force push to shared branches
-- **NEVER** `gem push` manually — use `rake release[X.Y.Z]`
+- **NEVER** `gem push` manually — use `bin/release`
 - **ALWAYS** run validators before committing
 - **ALWAYS** write meaningful commit messages
 - Keep commits small and focused — one logical change per commit

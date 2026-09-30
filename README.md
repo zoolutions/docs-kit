@@ -1087,17 +1087,21 @@ application.register("reactive", ReactiveController)
 
 ## Releasing (maintainers)
 
-Cut a release with the version-bumping Rake task — never `gem push` by hand:
+Cut a release with `bin/release`. Never `gem push` by hand:
 
 ```bash
-rake release[1.0.0]           # bump → build-verify → commit → push → GitHub Release
-rake release[1.1.0.rc1]       # a pre-release (auto-flagged --prerelease)
-rake release[1.0.0,force]     # delete + re-create an existing tag/release
+bin/release list              # last releases + what each bump would give
+bin/release --dry-run         # the version it would cut + the changes since the last tag
+bin/release                   # patch bump (minor / major / 1.3.0.rc1 for others)
+bin/release 1.2.0 --force     # delete + re-create an existing tag/release
 ```
 
-The task (on `main`, clean tree only) bumps `lib/docs_kit/version.rb`, updates the
-lockfiles (incl. `docs/Gemfile.lock`), verifies `gem build --strict`, commits,
-pushes, and creates the GitHub Release. Publishing the tag fires
+`bin/release` checks you're on a clean, up-to-date `main`, confirms, and hands off
+to `rake release[X.Y.Z]` (`rakelib/release.rake`). That task bumps
+`lib/docs_kit/version.rb` and the `docs-kit` pin in `docs/Gemfile.lock` (in place,
+no re-resolve), verifies `gem build --strict`, commits, pushes, and creates the
+GitHub Release. Both files are shared verbatim with daisyui, dash, pgbus and
+phlex-reactive, so every gem releases the same way. Publishing the tag fires
 `.github/workflows/release.yml`, which runs the suite, rebuilds + content-checks
 the gem, signs it with Sigstore, and pushes to RubyGems over **OIDC trusted
 publishing** (no API token stored anywhere).
