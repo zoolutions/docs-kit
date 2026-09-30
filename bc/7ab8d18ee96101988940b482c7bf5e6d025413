@@ -1,0 +1,9 @@
+Rakefile
+  ai_agent 107-109,121-123,129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "bc7ab8d18ee96101988940b482c7bf5e6d025413",
+  "prompts": {}
+}
