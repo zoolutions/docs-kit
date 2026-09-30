@@ -4,6 +4,7 @@ require "fileutils"
 require "json"
 require "tmpdir"
 require "generators/docs_kit/install/migration"
+require "generators/docs_kit/install/migration_registry"
 require "generators/docs_kit/install/migrations/v1_2_0"
 
 # The 1.1 → 1.2 upgrade, run by `rails g docs_kit:install --sync`. Warn-only-safe:
