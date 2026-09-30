@@ -1,0 +1,30 @@
+README.md
+  s_bbe9b41266900b::t_96065a223a7a2f 105-115
+lib/generators/docs_kit/install/migrations/v1_2_0.rb
+  s_bbe9b41266900b::t_ff25ee1e10148d 1-37,40-44,51-63,66,70-75,77-114,116-120
+  s_bbe9b41266900b::t_e748e5e664710c 64-65
+  s_bbe9b41266900b::t_1dab4cedcb5d9a 115
+  s_bbe9b41266900b::t_3c87a0301f8f20 38-39,45-50,67-69,76
+spec/generators/migrations/v1_2_0_spec.rb
+  s_bbe9b41266900b::t_1f8f23e3b38b3c 1-134
+lib/generators/docs_kit/install/migration_registry.rb
+  s_bbe9b41266900b::t_1dab4cedcb5d9a 4,22-24,30,35-41
+CHANGELOG.md
+  s_bbe9b41266900b::t_14c36deb3ba3c7 5-30,49-54,64-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d530b71c1cede5c4d91a396582501ffb84785416",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
