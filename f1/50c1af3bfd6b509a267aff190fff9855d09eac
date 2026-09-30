@@ -1,0 +1,25 @@
+spec/generators/migration_registry_spec.rb
+  ai_agent 121-124,130-139
+docs-kit.gemspec
+  s_1d2c2b796b1e7f::t_7fd412f8f4bb3d 52-56
+docs/Gemfile.lock
+  ai_agent 6
+CHANGELOG.md
+  s_1d2c2b796b1e7f::t_d8fbec163c00ea 38-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f150c1af3bfd6b509a267aff190fff9855d09eac",
+  "prompts": {},
+  "sessions": {
+    "s_1d2c2b796b1e7f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d47f579-321f-411d-a68a-0fd7b5746dfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
