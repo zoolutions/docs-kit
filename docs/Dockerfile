@@ -9,7 +9,7 @@
 # git, bun) and compiles gems + assets; the final stage copies only the installed
 # bundle + the app, so none of the build tooling ships in the runtime image.
 
-ARG RUBY_VERSION=3.4.2
+ARG RUBY_VERSION=3.4.11
 FROM ruby:$RUBY_VERSION-slim AS base
 
 ARG BUN_VERSION=1.4.2

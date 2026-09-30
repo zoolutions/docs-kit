@@ -578,7 +578,7 @@ module DocsKit
       # The RUBY_VERSION build ARG default: the host's running Ruby (X.Y.Z), so a
       # site's image matches its dev Ruby. Used in Dockerfile.tt.
       def ruby_version_arg
-        RUBY_VERSION[/\d+\.\d+\.\d+/] || "3.4.2"
+        RUBY_VERSION[/\d+\.\d+\.\d+/] || "3.4.11"
       end
 
       # True when the site bundles Thruster (HTTP caching + compression +
