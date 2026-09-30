@@ -54,11 +54,9 @@ jobs:
       RAILS_ENV: test
       HEADLESS: "true"
       PLAYWRIGHT_BROWSERS_PATH: /home/runner/.cache/ms-playwright
-      # The app depends on the gem via `path: ".."`, whose gemspec lists files with
-      # `git ls-files` — so every commit changes the path-gem's digest and bundler's
-      # frozen mode (forced by bundler-cache) fails with "the gemspecs for path gems
-      # changed". Unfreeze for this app; the lock is still respected.
-      BUNDLE_FROZEN: "false"
+      # Frozen (bundler-cache's default): docs/Gemfile.lock pins the path gem's
+      # version, so a release that forgets to commit the refreshed lock fails here
+      # with "the gemspecs for path gems changed" instead of drifting silently.
     steps:
       - uses: actions/checkout@v7
 
