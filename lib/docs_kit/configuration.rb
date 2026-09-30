@@ -366,14 +366,25 @@ module DocsKit
     # order. Each configured Hash/DocVersion is coerced via DocVersion.from, so
     # the switcher and the snapshot reader only ever see value objects.
     # Blank/nil config yields [].
+    # With no entry marked current: true, the first is promoted to current, so
+    # the fallback current version is unprefixed, not archived and indexed
+    # everywhere (switcher, archived banner, noindex) — never half-archived.
     def versions
-      Array(@versions).map { |version| DocsKit::DocVersion.from(version) }
+      raw = Array(@versions)
+      list = raw.map { |version| DocsKit::DocVersion.from(version) }
+      return list if list.empty? || list.any?(&:current?)
+
+      first = raw.first
+      explicit = first.is_a?(DocsKit::DocVersion) ? nil : first.to_h.transform_keys(&:to_sym)[:noindex]
+      promoted = DocsKit::DocVersion.new(id: list.first.id, label: list.first.label, ref: list.first.ref,
+                                         current: true, noindex: explicit)
+      [promoted, *list.drop(1)]
     end
 
-    # The version serving unprefixed at /docs: the entry marked current: true,
-    # else the first configured entry, else nil (an unversioned site).
+    # The version serving unprefixed at /docs: the entry marked current: true
+    # (see #versions for the first-entry fallback), else nil (unversioned site).
     def current_version
-      versions.find(&:current?) || versions.first
+      versions.find(&:current?)
     end
 
     # The configured version with this id, or nil when unknown (or nil id).

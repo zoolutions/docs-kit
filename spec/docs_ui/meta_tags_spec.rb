@@ -174,6 +174,35 @@ RSpec.describe DocsUI::MetaTags do
       expect(render_tags).to include('<meta name="robots" content="noindex, nofollow">')
     end
 
+    describe "robots under a version scope" do
+      it "emits noindex, follow for an archived version (canonical untouched)" do
+        DocsKit.configure { |c| c.seo.site_url = "https://docs.example.com" }
+        archived = DocsKit::DocVersion.new(id: "1.0")
+
+        html = DocsKit::Scope.with(version: archived) { render_tags }
+
+        expect(html).to include('<meta name="robots" content="noindex, follow">')
+        expect(html).to include('<link rel="canonical" href="https://docs.example.com">')
+      end
+
+      it "keeps today's behavior for the current version in scope (regression pin)" do
+        current = DocsKit::DocVersion.new(id: "1.1", current: true)
+
+        html = DocsKit::Scope.with(version: current) { render_tags }
+
+        expect(html).not_to include('name="robots"')
+      end
+
+      it "restores seo.robots for a version with noindex: false" do
+        DocsKit.configure { |c| c.seo.robots = "index, follow" }
+        opted_out = DocsKit::DocVersion.new(id: "1.0", noindex: false)
+
+        html = DocsKit::Scope.with(version: opted_out) { render_tags }
+
+        expect(html).to include('<meta name="robots" content="index, follow">')
+      end
+    end
+
     it "emits <meta name=\"theme-color\"> only when config.seo.theme_color is set" do
       html = render_tags
       expect(html).not_to include("theme-color")

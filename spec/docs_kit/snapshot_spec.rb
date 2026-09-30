@@ -123,6 +123,10 @@ RSpec.describe DocsKit::Snapshot do
     it "reads the entry's markdown body from its snapshot file" do
       expect(snapshot.from_slug("installation").markdown).to include('gem "docs_kit"')
     end
+
+    it "exposes the entry's version (the ArchivedPage banner reads it)" do
+      expect(snapshot.from_slug("installation").version).to eq(version)
+    end
   end
 
   describe "degrading to an empty snapshot" do

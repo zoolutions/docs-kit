@@ -99,10 +99,20 @@ module DocsUI
       link(rel: "icon", href: seo.favicon)
     end
 
+    # An archived version in scope is noindex'd ("noindex, follow" — search
+    # engines keep pointing at the current docs while still crawling through)
+    # unless the version opts out with noindex: false; the canonical stays
+    # self-referential (pointing it at different content would send a second,
+    # conflicting signal). Otherwise: today's opt-in seo.robots exactly.
     def robots_meta
+      return meta(name: "robots", content: "noindex, follow") if scope_noindex?
       return unless seo.robots
 
       meta(name: "robots", content: seo.robots)
+    end
+
+    def scope_noindex?
+      !!DocsKit::Scope.version&.noindex
     end
 
     def theme_color_meta

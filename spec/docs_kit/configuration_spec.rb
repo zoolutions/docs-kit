@@ -670,7 +670,7 @@ RSpec.describe DocsKit::Configuration do
     end
 
     it "passes DocVersion instances through unchanged" do
-      version = DocsKit::DocVersion.new(id: "1.0")
+      version = DocsKit::DocVersion.new(id: "1.0", current: true)
       DocsKit.configure { |c| c.versions = [version] }
 
       expect(DocsKit.configuration.versions).to eq([version])
@@ -716,6 +716,17 @@ RSpec.describe DocsKit::Configuration do
       DocsKit.configure { |c| c.versions = [{ id: "1.1" }, { id: "1.0" }] }
 
       expect(DocsKit.configuration.current_version.id).to eq("1.1")
+    end
+
+    it "normalizes the fallback entry to current (unprefixed, not archived, indexed)" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.1" }, { id: "1.0" }] }
+
+      current = DocsKit.configuration.current_version
+      expect(current).to be_current
+      expect(current).not_to be_archived
+      expect(current.path_prefix).to eq("")
+      expect(current.noindex).to be(false)
+      expect(DocsKit.configuration.versions.last).to be_archived
     end
   end
 
