@@ -3,7 +3,7 @@ PATH
   specs:
     docs-kit (1.2.0)
       commonmarker (~> 2.0)
-      daisyui (>= 1.2, < 2)
+      daisyui (>= 1.2, < 3)
       nokogiri (>= 1.15, < 2)
       phlex-rails (>= 2.0, < 3)
       rails_icons (~> 1.1)

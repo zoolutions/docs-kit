@@ -49,10 +49,11 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 3.3"
 
   # The daisyUI Phlex component kit (Drawer/Menu/Card/...). Gemfile name is
-  # `daisyui`; require path is `daisy_ui`; module is `DaisyUI`. Bounded below the
-  # next major (a breaking release) so `gem build --strict` accepts it while the
-  # floor stays low enough for existing hosts.
-  s.add_dependency "daisyui", ">= 1.2", "< 2"
+  # `daisyui`; require path is `daisy_ui`; module is `DaisyUI`. Admits 2.x (its
+  # class merging leaves docs-kit's markup unchanged) and stays bounded below the
+  # next major so `gem build --strict` accepts it while the floor stays low
+  # enough for existing hosts.
+  s.add_dependency "daisyui", ">= 1.2", "< 3"
   # Phlex 2 + the Rails view glue (helper mixins, render_in, dom_id).
   s.add_dependency "phlex-rails", ">= 2.0", "< 3"
   # lucide icons synced into the host app's assets.
