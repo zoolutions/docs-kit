@@ -35,6 +35,9 @@ bundle exec rspec
 
 ### Changed
 
+- **daisyui 2.x is allowed.** The dependency is now `>= 1.2, < 3`. 1.2.0 was
+  tagged but never reached RubyGems (its release run failed a stale spec), so
+  1.2.1 is the first published 1.2 release.
 - **The reusable deploy workflow runs on Node 24 actions.** `deploy.yml` now
   uses `actions/checkout@v7`, `docker/setup-buildx-action@v4`,
   `docker/login-action@v4`, `docker/build-push-action@v7` and

@@ -118,17 +118,25 @@ RSpec.describe DocsKit::Generators::MigrationRegistry do
     end
   end
 
-  # The registry the generator actually uses. It ships EMPTY at 1.0.x — the
-  # mechanism is the deliverable, not any concrete transform yet. This guards
-  # that .default exists and is a real registry (so wiring can call it), while
-  # documenting that no migrations are registered at this version.
+  # The registry the generator actually uses: one entry per release that changes
+  # what a site must carry. This guards that .default is a real registry (so
+  # wiring can call it) and that every registered migration can actually run
+  # against the installed gem.
   describe ".default" do
     it "is a MigrationRegistry" do
       expect(described_class.default).to be_a(described_class)
     end
 
-    it "ships no migrations yet (the mechanism is the 1.0 deliverable)" do
-      expect(described_class.default.applicable("0.0.0")).to be_empty
+    it "registers the 1.2.0 migration for a site synced at 1.1" do
+      targets = described_class.default.applicable("1.1.1").map(&:to)
+
+      expect(targets).to include(Gem::Version.new("1.2.0"))
+    end
+
+    it "registers no migration newer than the installed gem" do
+      unreleased = described_class::MIGRATIONS.map(&:to).select { |to| to > Gem::Version.new(DocsKit::VERSION) }
+
+      expect(unreleased).to be_empty
     end
   end
 end
