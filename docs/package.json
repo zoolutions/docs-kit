@@ -6,8 +6,8 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
-    "daisyui": "^5.7.22",
-    "playwright": "^1.62.1",
+    "daisyui": "^5.7.47",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4.3.3"
   }
 }

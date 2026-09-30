@@ -624,6 +624,16 @@ RSpec.describe DocsKit::Generators::InstallGenerator do
       expect(package).to include(%("watch:css": "bin/build-css --watch"))
     end
 
+    it "floors the CSS toolchain at the versions the gem's own docs site builds with" do
+      build_skeleton
+      run_generator
+
+      stub = JSON.parse(read("package.json")).fetch("devDependencies")
+      docs = JSON.parse(File.read(File.expand_path("../../docs/package.json", __dir__))).fetch("devDependencies")
+
+      expect(stub).to eq(docs.slice(*stub.keys))
+    end
+
     it "does not overwrite an existing package.json that already has build:css" do
       existing = %({\n  "scripts": { "build:css": "custom" }\n}\n)
       build_skeleton(package_json: existing)

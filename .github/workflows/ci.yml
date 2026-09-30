@@ -20,13 +20,13 @@ concurrency:
 jobs:
   rake:
     name: rake (Ruby ${{ matrix.ruby }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.2", "3.3", "3.4"]
+        ruby: ["3.3", "3.4"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
@@ -46,7 +46,7 @@ jobs:
   # exact gap that let the og:image 404 ship.
   docs-site:
     name: docs site (RSpec + Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: docs
@@ -60,7 +60,7 @@ jobs:
       # changed". Unfreeze for this app; the lock is still respected.
       BUNDLE_FROZEN: "false"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -75,7 +75,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -90,6 +90,9 @@ jobs:
       - name: Install Playwright system dependencies
         run: sudo bunx --bun playwright install-deps chromium 2>/dev/null || true
 
+      - name: RuboCop
+        run: bundle exec rubocop
+
       - name: RSpec (request + system specs)
         run: bundle exec rspec
 
@@ -100,9 +103,9 @@ jobs:
   # that never bundles `mcp` is byte-identical to before this feature.
   without-mcp:
     name: gate (no mcp gem)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
