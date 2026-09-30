@@ -1,0 +1,9 @@
+spec/generators/migrations/v1_2_0_spec.rb
+  ai_agent 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7d336eb1cd135c86fde766d88e6a63d38ddc6dbb",
+  "prompts": {}
+}
