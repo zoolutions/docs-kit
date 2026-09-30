@@ -1,0 +1,39 @@
+docs/package.json
+  s_bbe9b41266900b::t_ab0be1e6c34288 9-10
+docs/bun.lock
+  ai_agent 7-10,85,139,141
+lib/generators/docs_kit/install/templates/Dockerfile.tt
+  s_bbe9b41266900b::t_ab0be1e6c34288 18
+lib/generators/docs_kit/install/install_generator.rb
+  s_bbe9b41266900b::t_ab0be1e6c34288 542-544
+docs/Dockerfile
+  s_bbe9b41266900b::t_ab0be1e6c34288 15
+docs/Gemfile.lock
+  ai_agent 4,18-20,24-29,31-35,38-40,48,50-53,56-57,62-63,65-69,71-75,77,94,111,115,119,141,147,167,172,177,182,184,189,200,224-235,237,248-250,263,271,293,314,330,335,343-345,391-401,405,411-412,416,420,429,431,440,442,445,447-448,451,455,467,471,475,477,485,489,494,498,503-504
+CHANGELOG.md
+  s_bbe9b41266900b::t_693e4faf288798 5-16
+spec/generators/install_generator_spec.rb
+  s_bbe9b41266900b::t_ab0be1e6c34288 627-636
+.github/workflows/release.yml
+  s_bbe9b41266900b::t_ab0be1e6c34288 23,40,100,117,131,149,162,166
+.github/workflows/ci.yml
+  s_bbe9b41266900b::t_ab0be1e6c34288 29,63,78,105
+.github/workflows/deploy.yml
+  s_bbe9b41266900b::t_ab0be1e6c34288 102,121,124,131,156,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "91a272b9310e3bff74ae32c82d8ba5a1e1c08683",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
