@@ -370,10 +370,15 @@ module DocsKit
     # the fallback current version is unprefixed, not archived and indexed
     # everywhere (switcher, archived banner, noindex) — never half-archived.
     def versions
-      list = Array(@versions).map { |version| DocsKit::DocVersion.from(version) }
+      raw = Array(@versions)
+      list = raw.map { |version| DocsKit::DocVersion.from(version) }
       return list if list.empty? || list.any?(&:current?)
 
-      [list.first.as_current, *list.drop(1)]
+      first = raw.first
+      explicit = first.is_a?(DocsKit::DocVersion) ? nil : first.to_h.transform_keys(&:to_sym)[:noindex]
+      promoted = DocsKit::DocVersion.new(id: list.first.id, label: list.first.label, ref: list.first.ref,
+                                         current: true, noindex: explicit)
+      [promoted, *list.drop(1)]
     end
 
     # The version serving unprefixed at /docs: the entry marked current: true
