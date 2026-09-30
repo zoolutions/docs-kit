@@ -104,8 +104,9 @@ task :release, %i[version force] do |_t, args|
 
   # Step 2: Refresh lockfiles and verify the gem builds cleanly. docs/ is the
   # dogfood site — refresh its lock too so `bundle install` there resolves the
-  # new gem version. The lockfiles are gitignored (a gem doesn't commit them),
-  # so this is verification only; nothing here gets committed.
+  # new gem version. The root Gemfile.lock is gitignored (a gem doesn't commit
+  # it); docs/Gemfile.lock is tracked (the site deploys from it) and carries the
+  # docs-kit version, so it is committed with the bump in Step 3.
   header "Build verification"
   sh("bundle install --quiet")
   success "Gemfile.lock refreshed"
@@ -117,14 +118,15 @@ task :release, %i[version force] do |_t, args|
   sh("rm -f docs-kit-*.gem")
   success "Gem builds cleanly"
 
-  # Step 3: Commit version bump. Only version.rb is committed — Gemfile.lock and
-  # docs/Gemfile.lock are gitignored (conventional for a gem), so staging them
-  # would abort on `git add`. The build above already verified they resolve.
+  # Step 3: Commit version bump — version.rb plus the refreshed docs/Gemfile.lock
+  # (else the docs lock lags one release behind). The root Gemfile.lock is
+  # gitignored, so staging it would abort on `git add`.
   header "Git commit"
   version_changed =
     !`git diff #{version_file}`.strip.empty? || !`git diff --cached #{version_file}`.strip.empty?
   if version_changed
     sh("git add #{version_file}")
+    sh("git add docs/Gemfile.lock") if File.exist?("docs/Gemfile.lock")
     sh("git commit -m 'chore: bump version to #{new_version}'")
     success "Committed version bump"
   else
