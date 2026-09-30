@@ -56,8 +56,9 @@ Releases go through `bin/release` (the front door to `rake release[X.Y.Z]` in
 `rakelib/release.rake`: bumps version + lockfile pins, verifies the build,
 commits, pushes, creates the GitHub Release). The Release workflow then publishes
 to RubyGems. Never `gem push` by hand. `bin/release`, `rakelib/release.rake` and
-the shared jobs of `release.yml` are byte-identical across the zoolutions gems:
-change them in every repo or none.
+the shared jobs of `release.yml` are the zoolutions release kit, byte-identical
+across the gems: change them here (with specs), then roll out with
+`script/release-kit sync` or `/release-kit`. See RELEASE_KIT.md.
 
 ## Pre-Commit Checklist
 
