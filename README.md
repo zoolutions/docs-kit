@@ -1100,8 +1100,8 @@ bin/release 1.2.0 --force     # delete + re-create an existing tag/release
 to `rake release[X.Y.Z]` (`rakelib/release.rake`). That task bumps
 `lib/docs_kit/version.rb` and the `docs-kit` pin in `docs/Gemfile.lock` (in place,
 no re-resolve), verifies `gem build --strict`, commits, pushes, and creates the
-GitHub Release. Both files are shared verbatim with daisyui, dash, pgbus and
-phlex-reactive, so every gem releases the same way. Publishing the tag fires
+GitHub Release. Both files belong to the zoolutions release kit that every gem
+shares; see [RELEASE_KIT.md](RELEASE_KIT.md) to adopt or upgrade it elsewhere. Publishing the tag fires
 `.github/workflows/release.yml`, which runs the suite, rebuilds + content-checks
 the gem, signs it with Sigstore, and pushes to RubyGems over **OIDC trusted
 publishing** (no API token stored anywhere).
