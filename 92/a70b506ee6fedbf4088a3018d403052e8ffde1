@@ -1,0 +1,19 @@
+app/components/docs_ui/shell.rb
+  ai_agent 168-169
+app/components/docs_ui/archived_page.rb
+  ai_agent 71
+docs/Gemfile.lock
+  ai_agent 4,421
+lib/docs_kit/doc_version.rb
+  ai_agent 52-56
+app/components/docs_ui/version_switcher.rb
+  ai_agent 40
+lib/docs_kit/configuration.rb
+  ai_agent 369-371,373-376,379-380,382
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "92a70b506ee6fedbf4088a3018d403052e8ffde1",
+  "prompts": {}
+}
