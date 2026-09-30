@@ -1,0 +1,43 @@
+README.md
+  s_bbe9b41266900b::t_4e145cefc2c4a8 1090,1093-1096,1099-1104
+spec/rakelib/release_kit_spec.rb
+  s_bbe9b41266900b::t_0d16822288b84c 66
+  s_bbe9b41266900b::t_e2d55e07c1bf70 1-65,67-93,113-114
+  s_bbe9b41266900b::t_7b83f74a0185f5 94-112
+AGENTS.md
+  s_bbe9b41266900b::t_4e145cefc2c4a8 37,99
+.claude/rules/git-workflow.md
+  s_bbe9b41266900b::t_4e145cefc2c4a8 55-56,58-60,74
+.claude/commands/review-pr.md
+  s_bbe9b41266900b::t_4e145cefc2c4a8 31
+rakelib/release.rake
+  s_bbe9b41266900b::t_ea42c2057609e4 1-27,29,31,38-48,52-83,121,136,146,154-155,158,162,201,231,233,238
+  s_bbe9b41266900b::t_7f5f3ae2b7e16b 84-100,126
+  s_bbe9b41266900b::t_28b84dc7e58ea7 28,30,32,37,49-51
+  s_bbe9b41266900b::t_0d16822288b84c 33-36
+  s_bbe9b41266900b::t_297ee8403b34e9 101-120,122-125,127-135,137-145,147-153,156-157,159-161,163-200,202-230,232,234-237
+Rakefile
+  s_bbe9b41266900b::t_6f0481a5d16816 14,29-30
+.github/workflows/release.yml
+  s_bbe9b41266900b::t_1e56d044950233 3-11,20,23,27,29,32,35,38,43-45,47-49,51,56-58,60-67,70-71,75-77,79-80,83-84,86-87,91-92,99-100,102-103,106,110-112,121-124,126,132-133,135,142-144,146,148-149,151,155,158,167,171,175,178-180,182-184
+  s_bbe9b41266900b::t_bd1e2f7c7b99e6 93
+bin/release
+  s_bbe9b41266900b::t_c6f2348b492318 1-49,51-143
+  s_bbe9b41266900b::t_6f0481a5d16816 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "60238bed460ba067821b49fa5bca9f6f7bb9653d",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
