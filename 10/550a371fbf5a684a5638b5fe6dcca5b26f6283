@@ -1,0 +1,19 @@
+spec/release_kit/bin_release_spec.rb
+  s_bbe9b41266900b::t_964f7be1f87943 1-34,37-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "10550a371fbf5a684a5638b5fe6dcca5b26f6283",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
