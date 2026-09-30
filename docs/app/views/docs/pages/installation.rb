@@ -186,7 +186,7 @@ module Views
           DocsUI::Section("Requirements") do
             render DocsUI::PropTable.new(
               [
-                [ "Ruby", ">= 3.2" ],
+                [ "Ruby", ">= 3.3" ],
                 [ "Rails", ">= 7.1" ],
                 [ "Bun", "for the Tailwind CSS build" ],
                 [ "PostgreSQL", "not required (docs sites are stateless)" ]

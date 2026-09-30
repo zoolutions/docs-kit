@@ -46,7 +46,7 @@ Gem::Specification.new do |s|
     "rubygems_mfa_required" => "true"
   }
 
-  s.required_ruby_version = ">= 3.2"
+  s.required_ruby_version = ">= 3.3"
 
   # The daisyUI Phlex component kit (Drawer/Menu/Card/...). Gemfile name is
   # `daisyui`; require path is `daisy_ui`; module is `DaisyUI`. Bounded below the

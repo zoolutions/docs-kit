@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **Ruby 3.2 support.** `required_ruby_version` is now `>= 3.3` (3.2 reached
+  end of life in March 2026), and CI no longer tests it.
+
 ### Changed
 
 - **The reusable deploy workflow runs on Node 24 actions.** `deploy.yml` now

@@ -13,7 +13,7 @@ gem also **dogfoods itself**: its own docs site lives under `docs/`.
 
 ## Tech Stack
 
-- **Ruby**: >= 3.2 | **Rails**: >= 7.1 (engine)
+- **Ruby**: >= 3.3 | **Rails**: >= 7.1 (engine)
 - **Rendering**: phlex-rails (Phlex 2) — the chrome is `DocsUI::` components
 - **Styling**: daisyUI (via the `daisyui` gem) on Tailwind CSS v4, built with the standalone CLI (Bun)
 - **Icons**: lucide via `rails_icons`
@@ -127,7 +127,7 @@ open, the "on this page" TOC) — there is no server round-trip. See
 - Component specs (`spec/docs_ui/`) render a `DocsUI::` component and assert on the produced markup's semantics (an active link, a present theme option, a config-driven value).
 - Generator specs (`spec/generators/install_generator_spec.rb`) run `docs_kit:install` against a throwaway destination root (a tmp app skeleton, plain Thor — no Rails boot) and assert the file manifest + key contents.
 - Coverage: SimpleCov enforces `minimum_coverage 80` from within the suite (`bundle exec rspec` / `rake` fails below it); 100% aspired for `DocsKit::Configuration` and `DocsKit::Registry` (the public API sites depend on).
-- CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.2/3.3/3.4 for every push to `main` and every PR.
+- CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.3/3.4 for every push to `main` and every PR.
 - See `.claude/rules/testing.md`.
 
 ## Deploy
