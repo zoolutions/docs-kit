@@ -34,7 +34,7 @@ gem also **dogfoods itself**: its own docs site lives under `docs/`.
 6. **NO new emitted class without a CSS scan** — Tailwind scans Ruby; render-time classes (Drawer) need `@source inline(...)`
 7. **NO `raw`/`html_safe` on config free text** — let Phlex escape text; only gem-authored trusted markup may bypass the escape
 8. **NO required setup documented in the README alone** — wire it into the install generator AND the `docs-kit new` template, or new sites don't get it
-9. **NO manual `gem push`** — release via `rake release[X.Y.Z]`
+9. **NO manual `gem push`** — release via `bin/release`
 
 ### Always Do
 1. **TDD**: write the failing spec first — `spec/docs_kit/**` (config/registry, no boot), `spec/docs_ui/**` (component render), `spec/generators/install_generator_spec.rb` (generator, plain Thor) — then the minimum code (RED → GREEN → REFACTOR)
@@ -96,7 +96,7 @@ Command output is condensed by rtk (PreToolUse hook). Write commands in
 hook-rewritable shapes: no `for`/subshell wrappers, no `| head` on
 rtk-handled commands, `bundle exec rubocop` not `bin/rubocop`.
 
-Never `gem push` by hand — release via `rake release[X.Y.Z]`.
+Never `gem push` by hand — release via `bin/release` (wraps `rake release[X.Y.Z]`).
 
 ## Architecture
 

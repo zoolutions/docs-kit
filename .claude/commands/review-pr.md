@@ -28,7 +28,7 @@ New emitted class, no CSS scan         -> Update @source / @source inline(...)
 raw()/html_safe on config free text   -> Let Phlex escape text
 Render page to a bare string          -> #render_page through a real view context
 Required setup in README only         -> Also wire the install generator + docs-kit new
-Manual gem push                       -> rake release[X.Y.Z]
+Manual gem push                       -> bin/release
 ```
 
 ## Output Format
