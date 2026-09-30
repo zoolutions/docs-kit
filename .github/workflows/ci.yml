@@ -20,7 +20,7 @@ concurrency:
 jobs:
   rake:
     name: rake (Ruby ${{ matrix.ruby }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +46,7 @@ jobs:
   # exact gap that let the og:image 404 ship.
   docs-site:
     name: docs site (RSpec + Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: docs
@@ -90,6 +90,9 @@ jobs:
       - name: Install Playwright system dependencies
         run: sudo bunx --bun playwright install-deps chromium 2>/dev/null || true
 
+      - name: RuboCop
+        run: bundle exec rubocop
+
       - name: RSpec (request + system specs)
         run: bundle exec rspec
 
@@ -100,7 +103,7 @@ jobs:
   # that never bundles `mcp` is byte-identical to before this feature.
   without-mcp:
     name: gate (no mcp gem)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 

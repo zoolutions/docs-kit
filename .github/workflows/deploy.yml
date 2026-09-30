@@ -87,7 +87,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Only the build job pushes to GHCR (docker/login-action + build-push-action).
     permissions:
       contents: read
@@ -146,7 +146,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: docs
     # Pull-only (dash deploy --skip-push); no image push, so packages: read.
     permissions:

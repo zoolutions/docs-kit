@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: Test before release
     strategy:
       fail-fast: true
@@ -31,7 +31,7 @@ jobs:
 
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       gem_name: ${{ steps.build.outputs.gem_name }}
       version: ${{ steps.build.outputs.version }}
@@ -108,7 +108,7 @@ jobs:
 
   publish-rubygems:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: rubygems
     permissions:
       id-token: write
@@ -154,7 +154,7 @@ jobs:
 
   upload-release-assets:
     needs: [build, publish-rubygems]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
 
