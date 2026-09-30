@@ -20,7 +20,7 @@ jobs:
           - "3.4"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: ruby/setup-ruby@v1
@@ -37,7 +37,7 @@ jobs:
       version: ${{ steps.build.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -97,7 +97,7 @@ jobs:
           echo "=== SHA512 ===" && cat "$GEM_NAME.sha512"
 
       - name: Upload gem artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gem
           path: |
@@ -112,11 +112,9 @@ jobs:
     environment: rubygems
     permissions:
       id-token: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: gem
 
@@ -130,7 +128,7 @@ jobs:
           ruby-version: "3.4"
 
       - name: Configure RubyGems trusted publishing credentials
-        uses: rubygems/configure-rubygems-credentials@bc6dd217f8a4f919d6835fcfefd470ef821f5c44 # v1.0.0
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
 
       - name: Push to RubyGems with Sigstore attestation
         run: |
@@ -148,7 +146,7 @@ jobs:
           fi
 
       - name: Upload Sigstore bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sigstore
           path: docs-kit-*.gem.sigstore.json
@@ -161,11 +159,11 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: gem
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sigstore
 

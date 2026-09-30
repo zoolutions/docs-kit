@@ -539,9 +539,9 @@ module DocsKit
               "watch:css": "bin/build-css --watch"
             },
             "devDependencies": {
-              "@tailwindcss/cli": "^4.1.18",
-              "daisyui": "^5.6.0",
-              "tailwindcss": "^4.1.18"
+              "@tailwindcss/cli": "^4.3.3",
+              "daisyui": "^5.7.47",
+              "tailwindcss": "^4.3.3"
             }
           }
         JSON

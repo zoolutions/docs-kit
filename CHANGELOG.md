@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **The reusable deploy workflow runs on Node 24 actions.** `deploy.yml` now
+  uses `actions/checkout@v7`, `docker/setup-buildx-action@v4`,
+  `docker/login-action@v4`, `docker/build-push-action@v7` and
+  `webfactory/ssh-agent@v0.10.0`, clearing the Node 20 deprecation warning for
+  every site that calls it.
+- **`docs_kit:install` scaffolds current toolchain floors.** The `package.json`
+  stub requires `tailwindcss`/`@tailwindcss/cli` `^4.3.3` and `daisyui`
+  `^5.7.47` (a spec keeps them in lockstep with the gem's own docs site), and
+  the generated `Dockerfile` installs Bun 1.4.2.
+
 ### Fixed
 
 - **`docs_kit:page` injected the registry line once per group.** In a registry
