@@ -97,6 +97,12 @@ RSpec.describe DocsUI::Shell do
       expect(html).not_to include("version-switcher")
     end
 
+    it "renders no switcher for a single configured version" do
+      DocsKit.configure { |c| c.versions = [{ id: "1.0", current: true }] }
+
+      expect(topbar_only.new.call).not_to include("version-switcher")
+    end
+
     it "renders the switcher when two or more versions are configured" do
       DocsKit.configure do |c|
         c.versions = [{ id: "1.1", current: true }, { id: "1.0" }]

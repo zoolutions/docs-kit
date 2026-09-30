@@ -68,7 +68,7 @@ module DocsUI
       config = DocsKit.configuration
       slug = @entry.respond_to?(:slug) ? @entry.slug : nil
       live = slug && DocsKit::LlmsText.pages(config, version: config.current_version)
-                                      .find { |page| page.slug.to_s == slug.to_s }
+                                      .find { |page| page.respond_to?(:slug) && page.slug.to_s == slug.to_s }
       live&.href || config.brand_href
     end
 

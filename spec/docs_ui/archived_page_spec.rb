@@ -93,6 +93,35 @@ RSpec.describe DocsUI::ArchivedPage do
       expect(body_only.new(entry: current).call).not_to include("You are viewing")
     end
 
+    it "is absent for the fallback current version when none is marked current" do
+      registry = live_registry
+      DocsKit.configure do |c|
+        c.versions = [{ id: "1.1" }, { id: "1.0" }]
+        c.nav_registries = { "Docs" => registry }
+      end
+      fallback = entry_struct.new(title: "Installation", markdown: "New.", slug: "installation",
+                                  version: DocsKit.configuration.version("1.1"))
+
+      expect(body_only.new(entry: fallback).call).not_to include("You are viewing")
+    end
+
+    it "falls back to the docs home when a live page carries no slug (custom registry)" do
+      slugless = Struct.new(:title, :href, :view_class, keyword_init: true)
+                       .new(title: "Installation", href: "/docs/installation", view_class: Class.new)
+      registry = Class.new do
+        define_singleton_method(:all) { [slugless] }
+        define_singleton_method(:nav_items) { {} }
+      end
+      DocsKit.configure do |c|
+        c.versions = [{ id: "1.1", current: true }, { id: "1.0" }]
+        c.nav_registries = { "Docs" => registry }
+      end
+
+      html = body_only.new(entry: entry).call
+
+      expect(html).to include(%(href="#{DocsKit.configuration.brand_href}"))
+    end
+
     it "is absent for an entry that carries no version (a bare stub)" do
       versionless = Struct.new(:title, :markdown).new("Installation", "Body.")
 

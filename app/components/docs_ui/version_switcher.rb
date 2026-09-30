@@ -37,7 +37,7 @@ module DocsUI
 
     # The version this render serves: the request scope, else the current
     # version (versioning_enabled? guarantees one exists — with none marked
-    # current, the first configured entry is it).
+    # current, config.versions promotes the first entry).
     def scope_version
       DocsKit::Scope.version || config.current_version
     end

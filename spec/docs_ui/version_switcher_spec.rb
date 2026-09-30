@@ -77,9 +77,26 @@ RSpec.describe DocsUI::VersionSwitcher do
   it "shows the in-scope version's label on the trigger" do
     configure_versions
 
-    DocsKit::Scope.with(version: DocsKit.configuration.version("1.0")) do
-      expect(switcher(path: "/1.0/docs/installation").call).to include("1.0")
+    html = DocsKit::Scope.with(version: DocsKit.configuration.version("1.0")) do
+      switcher(path: "/1.0/docs/installation").call
     end
+
+    trigger = html[%r{<div tabindex="0" role="button"[^>]*>(.*?)</div>}m, 1]
+    expect(trigger).to include("1.0")
+    expect(trigger).not_to include("1.1")
+  end
+
+  it "links the fallback current version unprefixed when none is marked current" do
+    DocsKit.configure do |c|
+      c.versions = [{ id: "1.1" }, { id: "1.0" }]
+      c.snapshots_path = fixtures_root
+      c.nav_registries = { "Docs" => live_registry }
+    end
+
+    html = switcher(path: "/docs/live-only").call
+
+    expect(html).to include('href="/docs/live-only"')
+    expect(html).not_to include('href="/1.1/')
   end
 
   it "falls back to the target version's first page when the slug is absent there" do

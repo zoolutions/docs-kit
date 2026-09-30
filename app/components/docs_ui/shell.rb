@@ -165,7 +165,8 @@ module DocsUI
           # unless versioning is enabled, so an unversioned topbar is unchanged.
           render DocsUI::VersionSwitcher.new
           # Config-driven repo/social links (config.topbar_links) render as
-          # icon-only ghost buttons BEFORE the switcher; nothing when unset.
+          # icon-only ghost buttons between the version and theme switchers;
+          # nothing when unset.
           render DocsUI::TopbarLinks.new
           render DocsUI::ThemeSwitcher.new
         end

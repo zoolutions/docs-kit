@@ -176,12 +176,13 @@ RSpec.describe DocsUI::MetaTags do
 
     describe "robots under a version scope" do
       it "emits noindex, follow for an archived version (canonical untouched)" do
+        DocsKit.configure { |c| c.seo.site_url = "https://docs.example.com" }
         archived = DocsKit::DocVersion.new(id: "1.0")
 
         html = DocsKit::Scope.with(version: archived) { render_tags }
 
         expect(html).to include('<meta name="robots" content="noindex, follow">')
-        expect(html).not_to include('rel="canonical"')
+        expect(html).to include('<link rel="canonical" href="https://docs.example.com">')
       end
 
       it "keeps today's behavior for the current version in scope (regression pin)" do

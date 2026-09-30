@@ -49,6 +49,11 @@ module DocsKit
 
     def archived? = !current?
 
+    # This version promoted to current — noindex re-derived (false), since the
+    # archived default no longer applies. Configuration#versions uses it when no
+    # entry is marked current.
+    def as_current = self.class.new(id: id, label: label, ref: ref, current: true)
+
     # The root URL segment this version contributes: "" for the current version
     # (existing sites and their SEO untouched), "/#{id}" for an archived one.
     # Stacks with the i18n locale prefix later ("/de/1.0/docs/...").
