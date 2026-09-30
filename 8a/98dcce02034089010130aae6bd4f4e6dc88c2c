@@ -1,0 +1,21 @@
+.github/workflows/ci.yml
+  s_bbe9b41266900b::t_55c49328bd2f21 57-59
+docs/Gemfile.lock
+  ai_agent 115,117,189-190,193-194,341,343,369,371,422,424,462,464,512,514
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "8a98dcce02034089010130aae6bd4f4e6dc88c2c",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
