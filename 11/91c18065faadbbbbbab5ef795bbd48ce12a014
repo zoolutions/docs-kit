@@ -1,0 +1,29 @@
+AGENTS.md
+  s_bbe9b41266900b::t_b606bb3f4f2855 16,130
+CHANGELOG.md
+  s_bbe9b41266900b::t_a937ee69effbd1 5-9
+docs/app/views/docs/pages/installation.rb
+  s_bbe9b41266900b::t_b606bb3f4f2855 189
+.github/workflows/ci.yml
+  s_bbe9b41266900b::t_b606bb3f4f2855 27
+docs-kit.gemspec
+  s_bbe9b41266900b::t_b606bb3f4f2855 49
+.rubocop.yml
+  s_bbe9b41266900b::t_b606bb3f4f2855 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1191c18065faadbbbbbab5ef795bbd48ce12a014",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
