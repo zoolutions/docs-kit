@@ -30,6 +30,30 @@ RSpec.describe ReleaseKit do
     LOCK
   end
 
+  describe "the release task" do
+    around do |example|
+      original = Rake.application
+      Rake.application = Rake::Application.new
+      example.run
+    ensure
+      Rake.application = original
+    end
+
+    # `require "bundler/gem_tasks"` defines its own `release` (tag push + a local
+    # `gem push`). Rake would MERGE a second definition into it, running both.
+    it "replaces an existing release task instead of merging into it" do
+      Rake::Task.define_task(:build)
+      Rake::Task.define_task(release: :build) { raise "bundler's release ran" }
+
+      load File.expand_path("../../rakelib/release.rake", __dir__)
+
+      release = Rake::Task[:release]
+      expect(release.prerequisites).to be_empty
+      expect(release.actions.size).to eq(1)
+      expect(release.arg_names).to eq(%i[version force])
+    end
+  end
+
   describe ".pins" do
     it "finds the PATH spec and the CHECKSUMS entry, not dependency requirements or look-alike gems" do
       expect(described_class.pins(lock, "docs-kit")).to eq(%w[1.1.1 1.1.1])
