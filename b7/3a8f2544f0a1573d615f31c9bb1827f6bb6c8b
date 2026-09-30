@@ -1,0 +1,23 @@
+docs/Dockerfile
+  s_bbe9b41266900b::t_b88b9f5eb2303c 12
+lib/generators/docs_kit/install/install_generator.rb
+  s_bbe9b41266900b::t_b88b9f5eb2303c 581
+docs/.ruby-version
+  s_bbe9b41266900b::t_b88b9f5eb2303c 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b73a8f2544f0a1573d615f31c9bb1827f6bb6c8b",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
