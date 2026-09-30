@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Keep the shared release kit identical across the zoolutions gems. docs-kit
+# holds the canonical copy; see RELEASE_KIT.md.
+#
+#   script/release-kit sync  ../glyphs ../stationery   # write the kit into repos
+#   script/release-kit check ../glyphs ../stationery   # report drift, exit 1 if any
+#
+# The kit is three files:
+#   bin/release                    copied verbatim
+#   rakelib/release.rake           copied verbatim
+#   .github/workflows/release.yml  the header (up to the project-specific marker)
+#                                  and everything from the shared marker on are
+#                                  canonical; the `test` job between is the repo's.
+
+require "fileutils"
+
+module ReleaseKitSync
+  ROOT = File.expand_path("..", __dir__)
+  VERBATIM = %w[bin/release rakelib/release.rake].freeze
+  WORKFLOW = ".github/workflows/release.yml"
+  PROJECT_MARKER = /^  # ── project-specific.*\n/
+  SHARED_MARKER = "  # ── shared"
+  FROZEN_INSTALL = "BUNDLE_FROZEN: ${{ hashFiles('Gemfile.lock') != '' }}"
+
+  module_function
+
+  def canonical(path) = File.read(File.join(ROOT, path))
+
+  # [header, project-specific test job, shared jobs], or nil for a workflow that
+  # predates the kit (no markers).
+  def sections(workflow)
+    head, rest = workflow.split(PROJECT_MARKER, 2)
+    return unless rest&.include?(SHARED_MARKER)
+
+    marker = workflow[PROJECT_MARKER]
+    shared_at = rest.index(SHARED_MARKER)
+    [head, marker + rest[0...shared_at], rest[shared_at..]]
+  end
+
+  def merged_workflow(existing)
+    head, _test, shared = sections(canonical(WORKFLOW))
+    _head, test, _shared = existing && sections(existing)
+    test ? head + test + shared : nil
+  end
+
+  def sync(repo)
+    VERBATIM.each do |path|
+      target = File.join(repo, path)
+      FileUtils.mkdir_p(File.dirname(target))
+      File.write(target, canonical(path))
+      File.chmod(0o755, target) if path.start_with?("bin/")
+    end
+    sync_workflow(repo)
+  end
+
+  def sync_workflow(repo)
+    target = File.join(repo, WORKFLOW)
+    existing = File.exist?(target) ? File.read(target) : nil
+    FileUtils.mkdir_p(File.dirname(target))
+    if (merged = merged_workflow(existing))
+      File.write(target, merged)
+      puts "#{name(repo)}: synced"
+    else
+      File.write(target, canonical(WORKFLOW))
+      puts "#{name(repo)}: wrote the canonical #{WORKFLOW} — port this repo's test job into it " \
+           "(keep the frozen `bundle install` step)"
+    end
+  end
+
+  def problems(repo)
+    found = VERBATIM.reject { |path| read(repo, path) == canonical(path) }.map { |path| "#{path} differs" }
+    workflow = read(repo, WORKFLOW)
+    parts = workflow && sections(workflow)
+    return found << "#{WORKFLOW} has no kit markers (not adopted yet)" unless parts
+
+    found << "#{WORKFLOW} shared jobs differ" unless merged_workflow(workflow) == workflow
+    found << "#{WORKFLOW}: the test job must install frozen (#{FROZEN_INSTALL})" unless frozen?(parts[1])
+    found
+  end
+
+  def frozen?(test_job) = test_job.include?(FROZEN_INSTALL)
+
+  # Prints the repo's status and returns its problems (empty when in sync).
+  def check(repo)
+    found = problems(repo)
+    puts(found.empty? ? "#{name(repo)}: in sync" : found.map { |problem| "#{name(repo)}: #{problem}" })
+    found
+  end
+
+  def read(repo, path)
+    file = File.join(repo, path)
+    File.exist?(file) ? File.read(file) : nil
+  end
+
+  def name(repo) = File.basename(File.expand_path(repo))
+end
+
+command, *repos = ARGV
+abort "usage: script/release-kit sync|check REPO..." if repos.empty? || !%w[sync check].include?(command)
+
+if command == "sync"
+  repos.each { |repo| ReleaseKitSync.sync(repo) }
+else
+  problems = repos.flat_map { |repo| ReleaseKitSync.check(repo) }
+  exit(problems.empty? ? 0 : 1)
+end
