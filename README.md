@@ -102,9 +102,17 @@ A site created before the stamp existed (no comment) is treated as the earliest
 version, so it gets every migration. Migrations are **warn-only-safe** exactly
 like the drift report: what a step can't safely automate it prints as a manual
 checklist (`migration steps to apply by hand:`), never a destructive rewrite of
-a line you've edited. There are no migrations to apply yet — the mechanism ships
-ahead of the first release that needs one, so the upgrade path is already in
-place.
+a line you've edited. A value is only rewritten when it is exactly what an older
+docs-kit generated; anything you picked yourself is reported, never changed.
+
+Every release that needs site changes lists them under **"Upgrading from X.Y"**
+at the top of its [CHANGELOG](CHANGELOG.md) entry. That's what `--sync` automates
+and what it leaves to you. Read it before a `bundle update docs-kit` that crosses
+a minor version.
+
+| Release | `--sync` does | You do |
+|---------|---------------|--------|
+| 1.2 | Raises the Bun and Tailwind/daisyUI floors that docs-kit generated. Warns about Ruby below 3.3, hand-picked older floors, and a deploy workflow pinned off `@main` | Move to Ruby >= 3.3 before updating. `git rm --cached` a tracked `tailwind.sources.css` |
 
 ### One-time cleanup for sites created before these landed
 
