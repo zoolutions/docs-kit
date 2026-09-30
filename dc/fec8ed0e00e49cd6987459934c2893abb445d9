@@ -1,0 +1,27 @@
+.github/workflows/ci.yml
+  s_bbe9b41266900b::t_970ca86b796217 23,49,93-95,106
+.github/workflows/release.yml
+  s_bbe9b41266900b::t_970ca86b796217 12,34,111,157
+docs/.rubocop
+  s_bbe9b41266900b::t_6535143205f48c 1
+.github/workflows/deploy.yml
+  s_bbe9b41266900b::t_970ca86b796217 90,149
+CHANGELOG.md
+  s_bbe9b41266900b::t_5012e24067d352 11-12,16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "dcfec8ed0e00e49cd6987459934c2893abb445d9",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
