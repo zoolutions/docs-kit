@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Upgrading from 1.1
+
+```bash
+bundle update docs-kit
+bin/rails g docs_kit:install --sync   # applies the 1.2 migration, prints what it can't
+bun install && bun run build:css
+bundle exec rspec
+```
+
+- **Ruby 3.3 or newer is required.** docs-kit 1.2 won't install on 3.2. Move
+  `.ruby-version` and the Dockerfile's `ARG RUBY_VERSION` first (`--sync` warns
+  about either one if it's still below 3.3).
+- **`--sync` raises the toolchain it scaffolded.** In a Dockerfile that still
+  carries docs-kit's old `ARG BUN_VERSION=1.3.2`, it bumps that to 1.4.2. In
+  `package.json`, it raises docs-kit's old `tailwindcss` / `@tailwindcss/cli
+  ^4.1.18` and `daisyui ^5.6.0` floors to `^4.3.3` / `^5.7.47`. Values you
+  picked yourself are never rewritten: an older one is printed as a warning,
+  and a newer one is left alone. Review the result with `git diff`.
+- **Deploys pick up Node 24 actions and `ubuntu-26.04` automatically** when your
+  `deploy-docs.yml` calls `zoolutions/docs-kit/.github/workflows/deploy.yml@main`
+  (what `docs-kit new` scaffolds). `--sync` warns about a caller pinned to a tag
+  or SHA; move the pin forward.
+- **Untrack `app/assets/stylesheets/tailwind.sources.css`** if it's committed:
+  `git rm --cached app/assets/stylesheets/tailwind.sources.css`. The generator
+  now gitignores it; `--sync` reminds you when it's still tracked.
+
 ### Removed
 
 - **Ruby 3.2 support.** `required_ruby_version` is now `>= 3.3` (3.2 reached
@@ -20,6 +46,12 @@
   `^5.7.47` (a spec keeps them in lockstep with the gem's own docs site), and
   the generated `Dockerfile` installs Bun 1.4.2 (and falls back to Ruby 3.4.11
   when the host Ruby version can't be read).
+- **`docs_kit:install` gitignores the generated `tailwind.sources.css`.**
+  `bin/build-css` rewrites it on every build with machine-specific gem paths, so
+  a committed copy only churns. `--sync` adds the `.gitignore` entry and warns
+  when the file is still tracked. (#72)
+- **`--sync` runs its first release migration** (1.1 → 1.2, above). The
+  migration registry no longer ships empty.
 
 ### Fixed
 
@@ -29,6 +61,20 @@
   the end of *every* group and Thor's `inject_into_file` replaced every match.
   The anchor is now the file's last `page` line as a String, so one run adds
   exactly one line, at the end of the last group.
+
+### Added
+
+- **`DocsUI::Code` infers the language from `filename:`.**
+  `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
+  instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename
+  globs (`*.yml` → yaml, `Dockerfile` → docker, `*.sh` → shell, …). An explicit
+  `lexer:` still wins, and a block with neither (or an unguessable filename)
+  stays Ruby, so existing output is unchanged.
+
+## [1.1.1] and earlier
+
+### Fixed
+
 - **SEO `og:image` 404.** The og:image tag pointed at the raw config path
   (`https://site/og/og.png`), which isn't a served URL — Propshaft serves the
   digested asset under `/assets`. A relative `og_image` is now resolved through
@@ -43,12 +89,6 @@
 
 ### Added
 
-- **`DocsUI::Code` infers the language from `filename:`.**
-  `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
-  instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename
-  globs (`*.yml` → yaml, `Dockerfile` → docker, `*.sh` → shell, …). An explicit
-  `lexer:` still wins, and a block with neither (or an unguessable filename)
-  stays Ruby, so existing output is unchanged.
 - **`DocsUI::Landing` hero logo (`c.landing.logo`).** The landing hero now takes
   an optional brand mark above the eyebrow, in two forms: an inline single-path
   SVG (`{ svg: "<path d>", viewbox:, label: }`, rendered with `fill: currentColor`

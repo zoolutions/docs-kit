@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "migration"
+require_relative "migrations/v1_2_0"
 require_relative "../../../docs_kit/version"
 
 module DocsKit
@@ -18,24 +19,26 @@ module DocsKit
     # re-run on EVERY sync forever. It can't legitimately exist anyway (a site
     # can't have "arrived" at a release it doesn't have), so it's filtered out.
     #
-    # `.default` is the registry the generator uses. It SHIPS EMPTY at 1.0.x —
-    # the mechanism (stamp the synced version, detect the gap, run ordered
-    # transforms) is the deliverable; the first concrete `1.x → 1.y` transform is
-    # a one-line `Migration.new(...)` addition here once a release needs one.
+    # `.default` is the registry the generator uses. Each release that changes
+    # what a site must carry adds one `Migration.new(...)` entry to MIGRATIONS,
+    # its transform in migrations/vX_Y_Z.rb.
     class MigrationRegistry
       def initialize(migrations = [])
         @migrations = migrations.sort_by(&:to)
       end
 
-      # The registry the install generator runs during `--sync`. Empty today.
+      # The registry the install generator runs during `--sync`.
       def self.default
         @default ||= new(MIGRATIONS)
       end
 
-      # No migrations to register yet — the mechanism is the 1.0 deliverable.
-      # Add ordered `Migration.new(to: "1.x.0", description: "...") { ... }`
-      # entries here as future releases change config knobs, routes, or templates.
-      MIGRATIONS = [].freeze
+      # Ordered `Migration.new(to: "1.x.0", description: "...") { ... }` entries, one
+      # per release that changes config knobs, routes, templates, or toolchain.
+      MIGRATIONS = [
+        Migration.new(to: "1.2.0", description: Migrations::V1_2_0::DESCRIPTION) do |root, _generator|
+          Migrations::V1_2_0.call(root)
+        end
+      ].freeze
 
       # The migrations a site last synced at `from_version` still needs, ascending
       # by version — those in `(from_version, upto]`. `upto` defaults to the
