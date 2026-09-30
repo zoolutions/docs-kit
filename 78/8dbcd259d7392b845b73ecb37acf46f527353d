@@ -1,0 +1,41 @@
+Rakefile
+  s_bbe9b41266900b::t_382ae051b2c713 14
+script/release-kit
+  s_bbe9b41266900b::t_4e914a1fb849d8 35,79,83-85,89,106-107
+  s_bbe9b41266900b::t_4bdb1978534251 1-34,36-78,80-82,86-88,90-105,108
+rakelib/release.rake
+  s_bbe9b41266900b::t_972a109f2394cb 3-7
+bin/release
+  s_bbe9b41266900b::t_972a109f2394cb 16-18
+  s_bbe9b41266900b::t_6ef9e8ef0d549a 36
+.claude/commands/release-kit.md
+  s_bbe9b41266900b::t_3a08cd1167a72b 1-66
+.github/workflows/release.yml
+  s_bbe9b41266900b::t_8452a32797375e 3-12,40-41
+.claude/rules/git-workflow.md
+  s_bbe9b41266900b::t_bb8da45e2525ce 59-61
+RELEASE_KIT.md
+  s_bbe9b41266900b::t_cd0363107465e2 1-100
+README.md
+  s_bbe9b41266900b::t_bb8da45e2525ce 1103-1104
+spec/release_kit/release_kit_script_spec.rb
+  s_bbe9b41266900b::t_4e914a1fb849d8 10-12,17-19
+  s_bbe9b41266900b::t_1720a5436734d3 1-9,24,29-114
+  s_bbe9b41266900b::t_d2ced9e2e5f792 13-16,20-23,25-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "788dbcd259d7392b845b73ecb37acf46f527353d",
+  "prompts": {},
+  "sessions": {
+    "s_bbe9b41266900b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0844bf5-d539-49b9-bc4c-3bb9ef0862ba",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
