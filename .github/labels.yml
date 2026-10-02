@@ -169,6 +169,7 @@ paths:
   "exe/**/*": dx
   "docs/**/*": docs-site
   "spec/docs_ui/**/*": components
+  "spec/docs_kit_spec.rb": core
   "spec/generators/**/*": generators
   "spec/docs_kit/open_api/**/*": openapi
   "spec/docs_kit/{api_client,api_request}_spec.rb": openapi
