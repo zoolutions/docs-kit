@@ -1,0 +1,180 @@
+# The label taxonomy for this repository — the single source of truth.
+#
+# `bin/labels sync` makes GitHub match this file; `bin/labels sync --delete`
+# also removes labels that are not listed here (refusing any still on an issue
+# or pull request, open or closed). `bin/labels validate` checks the file offline. The
+# rules live in .github/LABELS.md.
+#
+# docs-kit holds the canonical copy of the labels kit (LABELS_KIT.md): every
+# label below outside the `area` group is SHARED — each repo on the kit carries
+# it byte-for-byte, and `script/labels-kit check` fails a repo that drifts.
+# `devops`, `dx` and `docs-site` are shared areas: a repo carries the ones that
+# apply, unchanged. The other areas are this repo's own.
+---
+ignore: []
+
+labels:
+  # ---------------------------------------------------------------- type ----
+  # Exactly one per issue/PR: what kind of work this is.
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+    group: type
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+    group: type
+  - name: performance
+    color: fbca04
+    description: Faster or leaner with no change in behaviour
+    group: type
+  - name: tech-debt
+    color: 9c27bb
+    description: Refactoring or cleanup that pays down an accepted shortcut
+    group: type
+  - name: security
+    color: e9e257
+    description: Vulnerability, hardening, or an authorization correctness fix
+    group: type
+  - name: documentation
+    color: 0075ca
+    description: Improvements or additions to documentation
+    group: type
+  - name: dependencies
+    color: d93f0b
+    description: Changes dependencies in some way
+    group: type
+  - name: chore
+    color: ededed
+    description: CI, tooling or configuration work with no behaviour change
+    group: type
+
+  # ---------------------------------------------------------------- area ----
+  # One or more per issue/PR: which part of the code it touches.
+  # Shared areas first (carried unchanged by every repo they apply to).
+  - name: devops
+    color: 006b75
+    description: CI, the release kit, Docker, deploys and infrastructure
+    group: area
+  - name: dx
+    color: 16a085
+    description: Developer experience — agent commands and rules, generators, local tooling
+    group: area
+  - name: docs-site
+    color: 2ea44f
+    description: The documentation site under docs/
+    group: area
+  # docs-kit's own areas.
+  - name: components
+    color: 1d76db
+    description: DocsUI components — shell, sidebar, topbar, page and code kit
+    group: area
+  - name: generators
+    color: 0366d6
+    description: The install and page generators and the new-site template
+    group: area
+  - name: core
+    color: 7eafec
+    description: Configuration, registry, scoping, versions and the Rails engine
+    group: area
+  - name: llms
+    color: 5b8def
+    description: llms.txt, Markdown export, search and the MCP server
+    group: area
+  - name: openapi
+    color: 3e6abd
+    description: OpenAPI pages and request examples
+    group: area
+  - name: rubocop
+    color: 1f6feb
+    description: The bundled RuboCop cops
+    group: area
+
+  # -------------------------------------------------------------- status ----
+  # Where the item is in its lifecycle. Never on a pull request.
+  - name: plan
+    color: 6f42c1
+    description: Has a /plan body with Context, Decision, Steps and Gates; ready for /lfg
+    group: status
+  - name: epic
+    color: "5319e7"
+    description: Umbrella item tracking several smaller issues
+    group: status
+  - name: blocker
+    color: 8a63d2
+    description: Blocks other work or a release until it is resolved
+    group: status
+  - name: needs-info
+    color: d4c5f9
+    description: Waiting on details before it can be planned or worked on
+    group: status
+
+  # ----------------------------------------------------------- community ----
+  # GitHub's defaults, kept because GitHub surfaces them to contributors.
+  - name: good first issue
+    color: 7057ff
+    description: Good for newcomers
+    group: community
+  - name: help wanted
+    color: "008672"
+    description: Extra attention is needed
+    group: community
+  - name: question
+    color: d876e3
+    description: Further information is requested
+    group: community
+  - name: duplicate
+    color: cfd3d7
+    description: This issue or pull request already exists
+    group: community
+  - name: invalid
+    color: e4e669
+    description: This doesn't seem right
+    group: community
+  - name: wontfix
+    color: ffffff
+    description: This will not be worked on
+    group: community
+
+# Path globs -> area label, used by `bin/labels infer` and by /plan and /lfg to
+# label deterministically from a diff. Matched with File.fnmatch and
+# File::FNM_PATHNAME | File::FNM_EXTGLOB: write a recursive glob as `**/*`. A
+# path may match several globs — every matching area applies.
+paths:
+  "app/components/**/*": components
+  "app/javascript/**/*": components
+  "lib/generators/**/*": generators
+  "lib/docs_kit/templates/**/*": generators
+  "lib/docs_kit/{configuration,registry,scope,scoping,doc_version,engine,controller,nav_item,topbar_link,shortcut,brand_logo,landing_config,seo_config,og_generator,snapshot,version}.rb": core
+  "lib/docs_kit/snapshot/**/*": core
+  "lib/docs_kit.rb": core
+  "lib/docs_kit/{llms_text,markdown_export,search_index,search_hit,mcp_server,mcp_tools}.rb": llms
+  "lib/docs_kit/{markdown_export,search_index}/**/*": llms
+  "app/controllers/**/*": llms
+  "lib/docs_kit/{open_api,api_client,api_request,api_templates}.rb": openapi
+  "lib/docs_kit/open_api/**/*": openapi
+  "lib/rubocop/**/*": rubocop
+  "lib/docs_kit/rubocop.rb": rubocop
+  "config/rubocop/**/*": rubocop
+  ".github/**/*": devops
+  "bin/release": devops
+  "rakelib/**/*": devops
+  "script/release-kit": devops
+  "RELEASE_KIT.md": devops
+  "bin/labels": dx
+  "script/labels-kit": dx
+  "LABELS_KIT.md": dx
+  ".claude/**/*": dx
+  "{AGENTS,CLAUDE}.md": dx
+  "exe/**/*": dx
+  "docs/**/*": docs-site
+  "spec/docs_ui/**/*": components
+  "spec/docs_kit_spec.rb": core
+  "spec/generators/**/*": generators
+  "spec/docs_kit/open_api/**/*": openapi
+  "spec/docs_kit/{api_client,api_request}_spec.rb": openapi
+  "spec/docs_kit/{llms_text,markdown_export,search_index,mcp_server,mcp_tools,llms_controller,mcp_controller,search_controller}_spec.rb": llms
+  "spec/docs_kit/{configuration,registry,scope,scoping,doc_version,controller,nav_item,topbar_link,shortcut,brand_logo,landing_config,seo_config,og_generator,snapshot}_spec.rb": core
+  "spec/rubocop/**/*": rubocop
+  "spec/labels_kit/**/*": dx
+  "spec/{release_kit,rakelib}/**/*": devops

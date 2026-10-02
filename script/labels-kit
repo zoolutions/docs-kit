@@ -1,0 +1,157 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Keep the shared labels kit identical across the zoolutions repos. docs-kit
+# holds the canonical copy; see LABELS_KIT.md.
+#
+#   script/labels-kit sync  ../glyphs ../stationery   # write the kit into repos
+#   script/labels-kit check ../glyphs ../stationery   # report drift, exit 1 if any
+#
+# The kit is:
+#   bin/labels           copied verbatim
+#   .github/LABELS.md    copied verbatim
+#   .github/labels.yml   the repo's own; a starter is written when it is missing.
+#                        Every label outside the `area` group, and the shared
+#                        areas, must match this repo's manifest exactly.
+
+require "fileutils"
+require "open3"
+require "rbconfig"
+require "yaml"
+
+module LabelsKitSync
+  ROOT = File.expand_path("..", __dir__)
+  VERBATIM = %w[bin/labels .github/LABELS.md].freeze
+  MANIFEST = ".github/labels.yml"
+  SHARED_AREAS = %w[devops dx docs-site].freeze
+  SHARED_GROUPS = %w[type status community].freeze
+  # Groups a repo may not extend: a repo-specific status (flaky-test) is fine, a
+  # second word for "bug" is not.
+  CLOSED_GROUPS = %w[type community].freeze
+  STARTER_PATHS = {
+    ".github/**/*" => "devops",
+    "bin/release" => "devops",
+    "rakelib/**/*" => "devops",
+    ".claude/**/*" => "dx",
+    "{AGENTS,CLAUDE}.md" => "dx",
+    "bin/labels" => "dx",
+    "docs/**/*" => "docs-site"
+  }.freeze
+
+  module_function
+
+  def canonical(path) = File.read(File.join(ROOT, path))
+
+  def canonical_labels = YAML.safe_load(canonical(MANIFEST)).fetch("labels")
+
+  # Labels every repo carries unchanged. Areas, sources and legacy labels are the repo's own.
+  def required_labels = canonical_labels.select { |label| SHARED_GROUPS.include?(label["group"]) }
+
+  def shared_areas = canonical_labels.select { |label| SHARED_AREAS.include?(label["name"]) }
+
+  # devops and dx apply everywhere; docs-site only to a repo with a docs app.
+  def applicable_areas(repo)
+    shared_areas.reject { |label| label["name"] == "docs-site" && !File.exist?(File.join(repo, "docs/Gemfile")) }
+  end
+
+  def sync(repo)
+    VERBATIM.each do |path|
+      target = File.join(repo, path)
+      FileUtils.mkdir_p(File.dirname(target))
+      File.write(target, canonical(path))
+      File.chmod(0o755, target) if path.start_with?("bin/")
+    end
+    write_starter(repo) unless File.exist?(File.join(repo, MANIFEST))
+    puts "#{name(repo)}: synced"
+  end
+
+  def write_starter(repo)
+    File.write(File.join(repo, MANIFEST), YAML.dump(starter(repo)))
+    puts "#{name(repo)}: wrote a starter #{MANIFEST} — add this repo's own area labels and path globs"
+  end
+
+  # The shared labels, the shared areas that apply, and their path globs.
+  def starter(repo)
+    areas = applicable_areas(repo)
+    names = areas.map { |label| label["name"] }
+    paths = STARTER_PATHS.select { |_glob, area| names.include?(area) }
+    { "ignore" => [], "labels" => required_labels + areas, "paths" => paths }
+  end
+
+  def problems(repo)
+    found = VERBATIM.reject { |path| read(repo, path) == canonical(path) }.map { |path| "#{path} differs" }
+    manifest = read(repo, MANIFEST)
+    return found << "#{MANIFEST} is missing" unless manifest
+
+    labels = manifest_labels(manifest)
+    return found << labels if labels.is_a?(String)
+
+    found + label_drift(labels, applicable_areas(repo)) + validation(repo)
+  end
+
+  # The manifest's labels, or a problem string when it can't be read as a list
+  # of labels — so one broken repo doesn't abort a multi-repo check.
+  def manifest_labels(manifest)
+    data = YAML.safe_load(manifest)
+    return "#{MANIFEST}: must be a mapping with a labels list" unless data.is_a?(Hash)
+
+    labels = data.fetch("labels", [])
+    return "#{MANIFEST}: labels must be a list of labels" unless labels.is_a?(Array) && labels.all?(Hash)
+
+    labels
+  rescue Psych::Exception => e
+    "#{MANIFEST} is not valid YAML (#{e.message.lines.first.strip})"
+  end
+
+  def label_drift(labels, areas)
+    by_name = labels.to_h { |label| [label["name"], label] }
+    missing = (required_labels + areas).map { |label| label["name"] }.reject { |name| by_name.key?(name) }
+
+    missing.map { |name| "shared label #{name} is missing" } + drifted(by_name) + extras(labels)
+  end
+
+  def extras(labels)
+    canonical_names = required_labels.map { |label| label["name"] }
+    labels.select { |label| CLOSED_GROUPS.include?(label["group"]) && !canonical_names.include?(label["name"]) }
+          .map { |label| "#{label['name']} is not a shared #{label['group']} label — use docs-kit's" }
+  end
+
+  def drifted(by_name)
+    (required_labels + shared_areas)
+      .select { |label| by_name.key?(label["name"]) && by_name[label["name"]] != label }
+      .map { |label| "shared label #{label['name']} differs from docs-kit's" }
+  end
+
+  # The repo's own bin/labels validates its own manifest, exactly as its
+  # commands will run it.
+  def validation(repo)
+    return [] unless File.exist?(File.join(repo, "bin/labels"))
+
+    output, status = Open3.capture2e(RbConfig.ruby, "bin/labels", "validate", chdir: repo)
+    status.success? ? [] : output.lines.map(&:strip).reject(&:empty?)
+  end
+
+  # Prints the repo's status and returns its problems (empty when in sync).
+  def check(repo)
+    found = problems(repo)
+    puts(found.empty? ? "#{name(repo)}: in sync" : found.map { |problem| "#{name(repo)}: #{problem}" })
+    found
+  end
+
+  def read(repo, path)
+    file = File.join(repo, path)
+    File.exist?(file) ? File.read(file) : nil
+  end
+
+  def name(repo) = File.basename(File.expand_path(repo))
+end
+
+command, *repos = ARGV
+abort "usage: script/labels-kit sync|check REPO..." if repos.empty? || !%w[sync check].include?(command)
+
+if command == "sync"
+  repos.each { |repo| LabelsKitSync.sync(repo) }
+else
+  problems = repos.flat_map { |repo| LabelsKitSync.check(repo) }
+  exit(problems.empty? ? 0 : 1)
+end

@@ -55,7 +55,9 @@ In the target checkout:
      `release:prepare` writes). If there's a preflight hook, prove it aborts
      with a clean tree.
 9. Commit (`chore(release): adopt the zoolutions release kit` or `…: sync the
-   release kit`), push, `gh pr create` with summary, test plan, and a
+   release kit`), push, `gh pr create --label chore --label devops` (both are shared labels from
+   the labels kit — if the repo isn't on it yet, adopt it first per LABELS_KIT.md
+   so they exist on GitHub) with summary, test plan, and a
    `## Deviations & judgment calls` section. Watch CI to green and fix what you
    broke.
 
