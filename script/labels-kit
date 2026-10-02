@@ -24,6 +24,7 @@ module LabelsKitSync
   VERBATIM = %w[bin/labels .github/LABELS.md].freeze
   MANIFEST = ".github/labels.yml"
   SHARED_AREAS = %w[devops dx docs-site].freeze
+  SHARED_GROUPS = %w[type status community].freeze
   STARTER_PATHS = {
     ".github/**/*" => "devops",
     "bin/release" => "devops",
@@ -40,8 +41,8 @@ module LabelsKitSync
 
   def canonical_labels = YAML.safe_load(canonical(MANIFEST)).fetch("labels")
 
-  # Labels every repo carries unchanged: all but the areas, which are the repo's own.
-  def required_labels = canonical_labels.reject { |label| label["group"] == "area" }
+  # Labels every repo carries unchanged. Areas, sources and legacy labels are the repo's own.
+  def required_labels = canonical_labels.select { |label| SHARED_GROUPS.include?(label["group"]) }
 
   def shared_areas = canonical_labels.select { |label| SHARED_AREAS.include?(label["name"]) }
 

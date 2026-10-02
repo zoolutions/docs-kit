@@ -171,6 +171,16 @@ RSpec.describe "bin/labels" do # rubocop:disable RSpec/DescribeClass -- a CLI, n
         end
       end
 
+      context "when the label name has a comma" do
+        let(:remote_labels) { [{ "name" => "a,b", "color" => "ededed", "description" => "" }] }
+
+        it "refuses to delete it rather than trusting an empty lookup" do
+          expect(cli.call(["sync", "--delete"])).to eq(1)
+
+          expect(runner.commands.grep(/label delete/)).to be_empty
+        end
+      end
+
       context "when the label is unused" do
         it "deletes it after checking open issues and pull requests" do
           expect(cli.call(["sync", "--delete"])).to eq(0)
@@ -268,6 +278,13 @@ RSpec.describe "bin/labels" do # rubocop:disable RSpec/DescribeClass -- a CLI, n
         expect(out.string).to include("nothing to migrate")
         expect(runner.commands.grep(/edit/)).to be_empty
       end
+    end
+
+    it "refuses a label whose name has a comma — gh --label would split it and find nothing" do
+      expect(cli.call(["migrate", "needs info, maybe", "needs-info"])).to eq(1)
+
+      expect(out.string).to include("comma")
+      expect(runner.calls).to be_empty
     end
 
     it "requires at least one replacement label" do

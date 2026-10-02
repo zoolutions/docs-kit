@@ -153,7 +153,11 @@ module Labels
 
     private
 
+    # `gh --label` splits its value on commas, so a name with one would be looked
+    # up as two labels and come back empty — read as "safe to delete".
     def numbers(kind, label, state, limit)
+      raise Error, "#{label.inspect} has a comma, which gh --label cannot query; rename it first" if label.include?(",")
+
       output = call([kind, "list", "--state", state, "--label", label, "--json", "number", "--limit", limit.to_s])
       parse(output).map { |item| item["number"] }
     end

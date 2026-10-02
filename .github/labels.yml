@@ -1,8 +1,8 @@
 # The label taxonomy for this repository — the single source of truth.
 #
 # `bin/labels sync` makes GitHub match this file; `bin/labels sync --delete`
-# also removes labels that are not listed here (refusing any still on an open
-# issue or pull request). `bin/labels validate` checks the file offline. The
+# also removes labels that are not listed here (refusing any still on an issue
+# or pull request, open or closed). `bin/labels validate` checks the file offline. The
 # rules live in .github/LABELS.md.
 #
 # docs-kit holds the canonical copy of the labels kit (LABELS_KIT.md): every

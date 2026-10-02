@@ -11,7 +11,9 @@ RSpec::Core::RakeTask.new(:spec)
 # stops RuboCop from discovering and loading docs/.rubocop.yml, whose gem
 # inheritance can't resolve here (and crashes CI). docs/ lints itself.
 RuboCop::RakeTask.new do |task|
-  task.patterns = %w[app lib spec rakelib script/release-kit Rakefile Gemfile docs-kit.gemspec]
+  task.patterns = %w[
+    app lib spec rakelib script/release-kit script/labels-kit bin/labels Rakefile Gemfile docs-kit.gemspec
+  ]
 end
 
 desc "Build gem and verify contents"

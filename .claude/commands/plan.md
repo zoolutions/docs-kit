@@ -2,7 +2,7 @@
 description: "Investigates the codebase, designs a solution, and produces a durable plan artifact — a GitHub issue or a plan markdown under docs/plans/. Read-only: never edits application code. Use before /lfg for anything non-trivial."
 model: fable
 argument-hint: "issue <feature or problem> | md <feature or problem> | <feature or problem>"
-allowed-tools: Bash(gh issue create:*), Bash(gh issue edit:*), Bash(gh issue list:*), Bash(bin/labels:*), Bash(gh issue view:*), Bash(gh search:*), Bash(gh label list:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(date:*), Read, Grep, Glob, Write, Agent, AskUserQuestion
+allowed-tools: Bash(gh issue create:*), Bash(gh issue edit:*), Bash(gh issue list:*), Bash(bin/labels infer:*), Bash(bin/labels sync), Bash(gh issue view:*), Bash(gh search:*), Bash(gh label list:*), Bash(git log:*), Bash(git diff:*), Bash(git branch:*), Bash(date:*), Read, Grep, Glob, Write, Agent, AskUserQuestion
 ---
 
 # Plan — design expensive, execute cheap
