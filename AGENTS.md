@@ -130,6 +130,19 @@ open, the "on this page" TOC) — there is no server round-trip. See
 - CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.3/3.4 for every push to `main` and every PR.
 - See `.claude/rules/testing.md`.
 
+## Labels
+
+Every pull request carries exactly one `type` label and at least one `area`
+label from `.github/labels.yml` — never a `status` label. `/plan` labels the
+issue, `/lfg` copies the issue's labels onto the PR (or infers them:
+`bin/labels infer $(git diff --name-only origin/main...HEAD)`). Labels change in
+the manifest and reach GitHub with `bin/labels sync`, never through the UI.
+Rules: `.github/LABELS.md`.
+
+This repo holds the canonical labels kit (`bin/labels`, `.github/LABELS.md`,
+and the shared labels in `.github/labels.yml`); `script/labels-kit sync|check`
+rolls it out to the other zoolutions repos. See `LABELS_KIT.md`.
+
 ## Deploy
 
 The build + deploy is defined **once** in this gem's reusable workflow
