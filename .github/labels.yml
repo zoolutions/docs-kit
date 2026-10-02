@@ -97,7 +97,7 @@ labels:
     description: Has a /plan body with Context, Decision, Steps and Gates; ready for /lfg
     group: status
   - name: epic
-    color: 5319e7
+    color: "5319e7"
     description: Umbrella item tracking several smaller issues
     group: status
   - name: blocker
@@ -168,3 +168,12 @@ paths:
   "{AGENTS,CLAUDE}.md": dx
   "exe/**/*": dx
   "docs/**/*": docs-site
+  "spec/docs_ui/**/*": components
+  "spec/generators/**/*": generators
+  "spec/docs_kit/open_api/**/*": openapi
+  "spec/docs_kit/{api_client,api_request}_spec.rb": openapi
+  "spec/docs_kit/{llms_text,markdown_export,search_index,mcp_server,mcp_tools,llms_controller,mcp_controller,search_controller}_spec.rb": llms
+  "spec/docs_kit/{configuration,registry,scope,scoping,doc_version,controller,nav_item,topbar_link,shortcut,brand_logo,landing_config,seo_config,og_generator,snapshot}_spec.rb": core
+  "spec/rubocop/**/*": rubocop
+  "spec/labels_kit/**/*": dx
+  "spec/{release_kit,rakelib}/**/*": devops
