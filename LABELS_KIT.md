@@ -76,5 +76,10 @@ memory:
 ## Changing the kit
 
 Change `bin/labels`, `.github/LABELS.md` or a shared label here, with specs,
-then `script/labels-kit sync <repos>` and open a PR per repo. After a shared
-label changes, each repo also needs `bin/labels sync` to push it to GitHub.
+then `script/labels-kit sync <repos>` and open a PR per repo.
+
+`sync` copies only the verbatim files; it never rewrites a repo's existing
+`.github/labels.yml`, which is the repo's own. So a shared-label change has to
+be written into each repo's manifest by hand in that repo's PR —
+`script/labels-kit check` names every repo still carrying the old label — and
+then pushed to GitHub with `bin/labels sync` there.

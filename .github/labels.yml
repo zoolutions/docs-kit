@@ -145,7 +145,7 @@ paths:
   "app/javascript/**/*": components
   "lib/generators/**/*": generators
   "lib/docs_kit/templates/**/*": generators
-  "lib/docs_kit/{configuration,registry,scope,scoping,doc_version,engine,controller,nav_item,topbar_link,shortcut,brand_logo,landing_config,seo_config,og_generator,snapshot}.rb": core
+  "lib/docs_kit/{configuration,registry,scope,scoping,doc_version,engine,controller,nav_item,topbar_link,shortcut,brand_logo,landing_config,seo_config,og_generator,snapshot,version}.rb": core
   "lib/docs_kit/snapshot/**/*": core
   "lib/docs_kit.rb": core
   "lib/docs_kit/{llms_text,markdown_export,search_index,search_hit,mcp_server,mcp_tools}.rb": llms

@@ -27,9 +27,13 @@ RSpec.describe "script/labels-kit" do # rubocop:disable RSpec/DescribeClass -- a
 
   def write_manifest(data) = File.write(File.join(target, ".github/labels.yml"), YAML.dump(data))
 
-  # A repo manifest: the shared labels unchanged plus one area of its own.
+  # A repo manifest: the shared labels and the shared areas that apply (no docs
+  # app here, so no docs-site) unchanged, plus one area of its own.
   def repo_manifest
-    shared = canonical_manifest["labels"].reject { |label| label["group"] == "area" }
+    applicable = %w[devops dx]
+    shared = canonical_manifest["labels"].select do |label|
+      label["group"] != "area" || applicable.include?(label["name"])
+    end
     own = { "name" => "widgets", "color" => "1d76db", "description" => "The widget kit", "group" => "area" }
     { "ignore" => [], "labels" => shared + [own], "paths" => { "lib/widgets/**/*" => "widgets" } }
   end
@@ -45,26 +49,40 @@ RSpec.describe "script/labels-kit" do # rubocop:disable RSpec/DescribeClass -- a
     end
 
     it "writes a starter manifest with the shared labels when the repo has none" do
-      out, = run_kit("sync", target)
+      out, status = run_kit("sync", target)
+
+      expect(status).to be_success
 
       names = target_manifest["labels"].map { |label| label["name"] }
       expect(names).to include("bug", "chore", "plan", "devops", "dx")
-      expect(names).not_to include("components")
+      expect(names).not_to include("components", "docs-site")
       expect(out).to include("add this repo's own area labels")
     end
 
     it "leaves an existing manifest alone — it is the repo's own" do
       write_manifest(repo_manifest)
 
+      _out, status = run_kit("sync", target)
+
+      expect(status).to be_success
+      expect(target_manifest).to eq(repo_manifest)
+    end
+
+    it "adds docs-site to the starter only when the repo has a docs app" do
+      FileUtils.mkdir_p(File.join(target, "docs"))
+      File.write(File.join(target, "docs/Gemfile"), "")
+
       run_kit("sync", target)
 
-      expect(target_manifest).to eq(repo_manifest)
+      expect(target_manifest["labels"].map { |label| label["name"] }).to include("docs-site")
     end
   end
 
   describe "check" do
     before do
-      run_kit("sync", target)
+      _out, status = run_kit("sync", target)
+      raise "sync failed" unless status.success?
+
       write_manifest(repo_manifest)
     end
 
@@ -94,6 +112,38 @@ RSpec.describe "script/labels-kit" do # rubocop:disable RSpec/DescribeClass -- a
 
       expect(status).not_to be_success
       expect(out).to include("shared label chore is missing", "shared label bug differs")
+    end
+
+    it "fails when a shared area that applies is missing" do
+      data = repo_manifest
+      data["labels"].reject! { |label| label["name"] == "dx" }
+      write_manifest(data)
+
+      out, status = run_kit("check", target)
+
+      expect(status).not_to be_success
+      expect(out).to include("shared label dx is missing")
+    end
+
+    it "fails on an extra label in a shared group" do
+      data = repo_manifest
+      data["labels"] << { "name" => "bugfix", "color" => "ededed", "description" => "Dup", "group" => "type" }
+      write_manifest(data)
+
+      out, status = run_kit("check", target)
+
+      expect(status).not_to be_success
+      expect(out).to include("bugfix is not a shared type label")
+    end
+
+    it "reports an unparseable manifest as a problem instead of crashing" do
+      File.write(File.join(target, ".github/labels.yml"), "labels: [unclosed\n")
+
+      out, status = run_kit("check", target, target)
+
+      expect(status).not_to be_success
+      expect(out).to include("labels.yml is not valid YAML")
+      expect(out).not_to include("Psych")
     end
 
     it "fails when the repo's manifest does not validate" do

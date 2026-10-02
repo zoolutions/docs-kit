@@ -25,6 +25,9 @@ module LabelsKitSync
   MANIFEST = ".github/labels.yml"
   SHARED_AREAS = %w[devops dx docs-site].freeze
   SHARED_GROUPS = %w[type status community].freeze
+  # Groups a repo may not extend: a repo-specific status (flaky-test) is fine, a
+  # second word for "bug" is not.
+  CLOSED_GROUPS = %w[type community].freeze
   STARTER_PATHS = {
     ".github/**/*" => "devops",
     "bin/release" => "devops",
@@ -46,6 +49,11 @@ module LabelsKitSync
 
   def shared_areas = canonical_labels.select { |label| SHARED_AREAS.include?(label["name"]) }
 
+  # devops and dx apply everywhere; docs-site only to a repo with a docs app.
+  def applicable_areas(repo)
+    shared_areas.reject { |label| label["name"] == "docs-site" && !File.exist?(File.join(repo, "docs/Gemfile")) }
+  end
+
   def sync(repo)
     VERBATIM.each do |path|
       target = File.join(repo, path)
@@ -64,7 +72,7 @@ module LabelsKitSync
 
   # The shared labels, the shared areas that apply, and their path globs.
   def starter(repo)
-    areas = shared_areas.reject { |label| label["name"] == "docs-site" && !Dir.exist?(File.join(repo, "docs")) }
+    areas = applicable_areas(repo)
     names = areas.map { |label| label["name"] }
     paths = STARTER_PATHS.select { |_glob, area| names.include?(area) }
     { "ignore" => [], "labels" => required_labels + areas, "paths" => paths }
@@ -75,14 +83,34 @@ module LabelsKitSync
     manifest = read(repo, MANIFEST)
     return found << "#{MANIFEST} is missing" unless manifest
 
-    found + label_drift(YAML.safe_load(manifest).fetch("labels", [])) + validation(repo)
+    labels = manifest_labels(manifest)
+    return found << labels if labels.is_a?(String)
+
+    found + label_drift(labels, applicable_areas(repo)) + validation(repo)
   end
 
-  def label_drift(labels)
-    by_name = labels.to_h { |label| [label["name"], label] }
-    missing = required_labels.map { |label| label["name"] }.reject { |name| by_name.key?(name) }
+  # The manifest's labels, or a problem string when it can't be read as a list
+  # of labels — so one broken repo doesn't abort a multi-repo check.
+  def manifest_labels(manifest)
+    labels = YAML.safe_load(manifest).fetch("labels", [])
+    return "#{MANIFEST}: labels must be a list of labels" unless labels.is_a?(Array) && labels.all?(Hash)
 
-    missing.map { |name| "shared label #{name} is missing" } + drifted(by_name)
+    labels
+  rescue Psych::Exception, NoMethodError, KeyError => e
+    "#{MANIFEST} is not valid YAML (#{e.message.lines.first.strip})"
+  end
+
+  def label_drift(labels, areas)
+    by_name = labels.to_h { |label| [label["name"], label] }
+    missing = (required_labels + areas).map { |label| label["name"] }.reject { |name| by_name.key?(name) }
+
+    missing.map { |name| "shared label #{name} is missing" } + drifted(by_name) + extras(labels)
+  end
+
+  def extras(labels)
+    canonical_names = required_labels.map { |label| label["name"] }
+    labels.select { |label| CLOSED_GROUPS.include?(label["group"]) && !canonical_names.include?(label["name"]) }
+          .map { |label| "#{label['name']} is not a shared #{label['group']} label — use docs-kit's" }
   end
 
   def drifted(by_name)
