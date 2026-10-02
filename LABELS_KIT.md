@@ -83,3 +83,8 @@ then `script/labels-kit sync <repos>` and open a PR per repo.
 be written into each repo's manifest by hand in that repo's PR —
 `script/labels-kit check` names every repo still carrying the old label — and
 then pushed to GitHub with `bin/labels sync` there.
+
+One blind spot: `check` lets a repo add its own `status` labels, so it can't
+tell a retired shared status label from a repo-specific one. When a shared
+status label is renamed or retired, `grep -l '<old name>' ../*/.github/labels.yml`
+across the repos and remove it (after `bin/labels migrate`) in each repo's PR.

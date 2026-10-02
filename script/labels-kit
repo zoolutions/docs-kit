@@ -92,11 +92,14 @@ module LabelsKitSync
   # The manifest's labels, or a problem string when it can't be read as a list
   # of labels — so one broken repo doesn't abort a multi-repo check.
   def manifest_labels(manifest)
-    labels = YAML.safe_load(manifest).fetch("labels", [])
+    data = YAML.safe_load(manifest)
+    return "#{MANIFEST}: must be a mapping with a labels list" unless data.is_a?(Hash)
+
+    labels = data.fetch("labels", [])
     return "#{MANIFEST}: labels must be a list of labels" unless labels.is_a?(Array) && labels.all?(Hash)
 
     labels
-  rescue Psych::Exception, NoMethodError, KeyError => e
+  rescue Psych::Exception => e
     "#{MANIFEST} is not valid YAML (#{e.message.lines.first.strip})"
   end
 

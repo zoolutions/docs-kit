@@ -146,6 +146,16 @@ RSpec.describe "script/labels-kit" do # rubocop:disable RSpec/DescribeClass -- a
       expect(out).not_to include("Psych")
     end
 
+    it "reports a manifest whose top level is a list instead of crashing" do
+      File.write(File.join(target, ".github/labels.yml"), "- name: bug\n")
+
+      out, status = run_kit("check", target)
+
+      expect(status).not_to be_success
+      expect(out).to include("must be a mapping with a labels list")
+      expect(out).not_to include("TypeError")
+    end
+
     it "fails when the repo's manifest does not validate" do
       data = repo_manifest
       data["paths"]["lib/**/*"] = "bug"
