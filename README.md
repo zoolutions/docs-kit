@@ -445,6 +445,37 @@ end
 `DocsUI::Page` includes the kit, so inside `#content` you call the components
 directly — `DocsUI::Section(...)`, `DocsUI::Code(...)` — no `render … .new`.
 
+### One page class, many records
+
+`title`, `eyebrow` and `description` are class macros by default, but the page
+reads them through **instance** methods — override those when one page class
+renders many records (one reference page per item):
+
+```ruby
+class Views::Docs::Widget < DocsUI::Page
+  eyebrow "Widgets"
+
+  def initialize(widget:) = @widget = widget
+  def title = @widget.name                # masthead <h1> and <title>
+  def description = @widget.summary       # meta/OG description (default: class macro, then #lead)
+  def content = md(@widget.notes)
+end
+
+# controller
+def show = render_page(Views::Docs::Widget.new(widget: Widget.find(params[:id])))
+```
+
+`eyebrow`, `description` and `on_page` inherit: a subclass that leaves one unset
+uses its parent page's. `title` does not — each page names itself.
+
+Such a page usually lives on its own route, outside the registry. If that route
+has no `(.:format)` segment, the masthead's **Markdown** action (which links
+`request.path + ".md"`) would 404 — hide it for that page:
+
+```ruby
+def markdown_action? = false
+```
+
 ### The authoring convention
 
 One rule covers the whole kit: **the primary argument is positional; modifiers
