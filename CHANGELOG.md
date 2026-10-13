@@ -2,6 +2,48 @@
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-10-13
+
+### Fixed
+
+- **Markdown links drop a script-bearing href.** `[text](javascript:…)`,
+  `data:`, `vbscript:` and any other scheme outside http(s), `mailto:` and
+  `tel:` now render the link text with no `<a>` (Phlex already refused
+  `javascript:`; `data:` and the rest slipped through). Scheme-less hrefs are
+  unchanged. The same guard `DocsUI::Markdown` images have.
+
+### Added
+
+- **A per-request `brand` and `title_suffix`.** Both accept a zero-arity
+  callable (`c.brand = -> { Current.tenant_name }`), evaluated on every render:
+  the topbar, sidebar header, `<title>`, `og:site_name`, llms.txt and the MCP
+  server name show that request's value. A callable brand needs an explicit
+  `c.nav_storage_key`; `DocsKit.configure` raises without one. New readers
+  `Configuration#brand_text` / `#title_suffix_text`; a String brand renders
+  exactly as before. (#92)
+- **Markdown images render.** `![alt](path "title")` in an `md` island now
+  renders a lazy-loaded `<img>` (it rendered nothing before). In a Rails view
+  a relative path resolves through the site's asset pipeline (`image_path`;
+  off a request it is kept as written); an absolute,
+  protocol-relative or root-relative URL is kept as written; the alt is the
+  description's plain text. A `javascript:`, `data:` or other non-http(s)
+  scheme renders no image. The page's `.md` twin exports it back to
+  `![alt](src)`. (#94)
+- **A dedicated docs import map.** `c.importmap_entry_point` (default
+  `"application"`) and `c.importmap` (an `Importmap::Map` or a callable
+  returning one, resolved per render) choose what the Shell's
+  `javascript_importmap_tags` loads, and `config.docs_kit.auto_pin = false` (in
+  `config/application.rb`) keeps the gem's `docs-nav` pin out of the host's
+  shared map. Unset, the head is unchanged. (#93)
+- **`DocsUI::Page` title, description and eyebrow per instance.** The page now
+  reads `#title`, `#description` and `#eyebrow`, which default to the class
+  macros, so one page class can render many records (`def title = @widget.name`)
+  without an anonymous subclass per render. The `eyebrow`, `description` and
+  `on_page` macros inherit from a parent page when unset. Pages using only the
+  class macros render byte-identically. (#95)
+
+## [1.2.1] — 2026-09-30 (with 1.2.0, same day)
+
 ### Upgrading from 1.1
 
 ```bash
@@ -58,11 +100,6 @@ bundle exec rspec
 
 ### Fixed
 
-- **Markdown links drop a script-bearing href.** `[text](javascript:…)`,
-  `data:`, `vbscript:` and any other scheme outside http(s), `mailto:` and
-  `tel:` now render the link text with no `<a>` (Phlex already refused
-  `javascript:`; `data:` and the rest slipped through). Scheme-less hrefs are
-  unchanged. The same guard `DocsUI::Markdown` images have.
 - **`docs_kit:page` injected the registry line once per group.** In a registry
   laid out as blank-line-separated groups (the layout `docs_kit:install`
   produces), the "page line not followed by a page line" Regexp anchor matched
@@ -72,39 +109,12 @@ bundle exec rspec
 
 ### Added
 
-- **A per-request `brand` and `title_suffix`.** Both accept a zero-arity
-  callable (`c.brand = -> { Current.tenant_name }`), evaluated on every render:
-  the topbar, sidebar header, `<title>`, `og:site_name`, llms.txt and the MCP
-  server name show that request's value. A callable brand needs an explicit
-  `c.nav_storage_key`; `DocsKit.configure` raises without one. New readers
-  `Configuration#brand_text` / `#title_suffix_text`; a String brand renders
-  exactly as before. (#92)
-- **Markdown images render.** `![alt](path "title")` in an `md` island now
-  renders a lazy-loaded `<img>` (it rendered nothing before). In a Rails view
-  a relative path resolves through the site's asset pipeline (`image_path`;
-  off a request it is kept as written); an absolute,
-  protocol-relative or root-relative URL is kept as written; the alt is the
-  description's plain text. A `javascript:`, `data:` or other non-http(s)
-  scheme renders no image. The page's `.md` twin exports it back to
-  `![alt](src)`. (#94)
 - **`DocsUI::Code` infers the language from `filename:`.**
   `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
   instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename
   globs (`*.yml` → yaml, `Dockerfile` → docker, `*.sh` → shell, …). An explicit
   `lexer:` still wins, and a block with neither (or an unguessable filename)
   stays Ruby, so existing output is unchanged.
-- **A dedicated docs import map.** `c.importmap_entry_point` (default
-  `"application"`) and `c.importmap` (an `Importmap::Map` or a callable
-  returning one, resolved per render) choose what the Shell's
-  `javascript_importmap_tags` loads, and `config.docs_kit.auto_pin = false` (in
-  `config/application.rb`) keeps the gem's `docs-nav` pin out of the host's
-  shared map. Unset, the head is unchanged. (#93)
-- **`DocsUI::Page` title, description and eyebrow per instance.** The page now
-  reads `#title`, `#description` and `#eyebrow`, which default to the class
-  macros, so one page class can render many records (`def title = @widget.name`)
-  without an anonymous subclass per render. The `eyebrow`, `description` and
-  `on_page` macros inherit from a parent page when unset. Pages using only the
-  class macros render byte-identically. (#95)
 
 ## [1.1.1] and earlier
 
