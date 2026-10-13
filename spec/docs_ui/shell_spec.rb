@@ -154,7 +154,7 @@ RSpec.describe DocsUI::Shell do
     before do
       tenant = current
       DocsKit.configure do |c|
-        c.brand = -> { tenant }
+        c.brand = -> { tenant.dup } # a copy, so a memoized first result would stay "Acme"
         c.nav_storage_key = "docs"
       end
     end

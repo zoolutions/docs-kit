@@ -584,6 +584,13 @@ module DocsKit
       resolve_text(@brand).to_s
     end
 
+    # True when the brand is a callable, i.e. anything that embeds the brand
+    # (the chrome, llms.txt) may differ per request and must not be stored in a
+    # shared cache.
+    def brand_per_request?
+      @brand.respond_to?(:call)
+    end
+
     # The rendered <title>/og:title suffix: #title_suffix resolved like
     # #brand_text, falling back to the resolved brand. nil only when both are nil,
     # so the title join drops it instead of leaving a dangling separator.

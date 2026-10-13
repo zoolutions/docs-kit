@@ -48,7 +48,12 @@ RSpec.describe "DocsKit::LlmsController (source wiring)" do
   it "sends a public max-age so a shared cache (dash-proxy, CDN) can store it" do
     # `public` alone is not storable under RFC 9111 — a shared cache needs a
     # freshness lifetime. expires_in adds max-age; stale? keeps `public`.
-    expect(source).to include("expires_in LLMS_MAX_AGE, public: true")
+    expect(source).to include("expires_in LLMS_MAX_AGE, public: shared")
+    expect(source).to include("stale?(etag: [DocsKit::VERSION, body], public: shared)")
+  end
+
+  it "drops `public` when the brand is a per-request callable (no cross-tenant shared cache)" do
+    expect(source).to include("shared = !docs_config.brand_per_request?")
     expect(source).to include("LLMS_MAX_AGE = 300")
   end
 

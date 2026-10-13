@@ -69,7 +69,9 @@ module Views
                 code { "title_suffix" }
                 plain " and "
                 code { "nav_storage_key" }
-                plain ", so setting it alone gets you sensible page titles and per-site localStorage namespacing."
+                plain ", so setting a String brand alone gets you sensible page titles and per-site localStorage namespacing. A callable brand (one per host or tenant) is resolved on every render and needs an explicit "
+                code { "nav_storage_key" }
+                plain " — the localStorage key must be stable per browser, not per request."
               end
               p do
                 plain "The theme list is the contract with your CSS: the values in "

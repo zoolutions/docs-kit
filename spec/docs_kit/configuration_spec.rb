@@ -413,6 +413,14 @@ RSpec.describe DocsKit::Configuration do
       expect(config.brand_text).to eq("acme")
     end
 
+    it "reports a callable brand as per-request, a String as not" do
+      config = described_class.new
+      expect(config.brand_per_request?).to be(false)
+
+      config.brand = -> { "Acme" }
+      expect(config.brand_per_request?).to be(true)
+    end
+
     it "keeps the raw value on the #brand reader" do
       callable = -> { "Acme" }
       config = described_class.new
