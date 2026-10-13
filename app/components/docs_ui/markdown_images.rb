@@ -15,8 +15,11 @@ module DocsUI
     # An image src kept verbatim: absolute, protocol-relative or root-relative.
     ABSOLUTE_SRC = %r{\A(?:https?:)?/}i
 
-    # Any URL scheme. Only http(s) may carry one; javascript:/data:/… are dropped.
+    # Any URL scheme. An image src may only carry http(s); a link href one of
+    # LINK_SCHEMES. Scheme-less URLs (relative, root-relative, protocol-relative,
+    # #anchor) always pass; javascript:, data:, vbscript: and the rest never do.
     URL_SCHEME = /\A[a-z][a-z0-9+.-]*:/i
+    LINK_SCHEMES = %w[http https mailto tel].freeze
 
     # The descendants whose string_content makes up the alt text; a soft or hard
     # line break between them becomes a space so words don't run together.
@@ -39,12 +42,23 @@ module DocsUI
     # Browsers strip ASCII whitespace/control characters before reading a
     # scheme ("java\tscript:"), so the check does too.
     def image_src(url)
-      bare = url.to_s.gsub(/[\x00-\x20]/, "")
+      bare = bare_url(url)
       return url if bare.match?(ABSOLUTE_SRC)
       return if bare.match?(URL_SCHEME)
 
       view_context ? image_path(url) : url
     end
+
+    # A link's href as written, or nil when it carries a scheme outside
+    # LINK_SCHEMES (the same whitespace-stripped scheme read as image_src).
+    def link_href(url)
+      scheme = bare_url(url)[URL_SCHEME]
+      return url if scheme.nil? || LINK_SCHEMES.include?(scheme.chomp(":").downcase)
+
+      nil
+    end
+
+    def bare_url(url) = url.to_s.gsub(/[\x00-\x20]/, "")
 
     # Commonmarker 2 has no plain-text export, so the alt is the image's text
     # (and inline code) descendants joined — emphasis markup is dropped.

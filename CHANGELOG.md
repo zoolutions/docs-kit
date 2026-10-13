@@ -58,6 +58,11 @@ bundle exec rspec
 
 ### Fixed
 
+- **Markdown links drop a script-bearing href.** `[text](javascript:…)`,
+  `data:`, `vbscript:` and any other scheme outside http(s), `mailto:` and
+  `tel:` now render the link text with no `<a>` (Phlex already refused
+  `javascript:`; `data:` and the rest slipped through). Scheme-less hrefs are
+  unchanged. The same guard `DocsUI::Markdown` images have.
 - **`docs_kit:page` injected the registry line once per group.** In a registry
   laid out as blank-line-separated groups (the layout `docs_kit:install`
   produces), the "page line not followed by a page line" Regexp anchor matched
