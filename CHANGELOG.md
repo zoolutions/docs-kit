@@ -75,8 +75,9 @@ bundle exec rspec
   `Configuration#brand_text` / `#title_suffix_text`; a String brand renders
   exactly as before. (#92)
 - **Markdown images render.** `![alt](path "title")` in an `md` island now
-  renders a lazy-loaded `<img>` (it rendered nothing before). A relative path
-  resolves through the site's asset pipeline (`image_path`); an absolute,
+  renders a lazy-loaded `<img>` (it rendered nothing before). In a Rails view
+  a relative path resolves through the site's asset pipeline (`image_path`;
+  off a request it is kept as written); an absolute,
   protocol-relative or root-relative URL is kept as written; the alt is the
   description's plain text. A `javascript:`, `data:` or other non-http(s)
   scheme renders no image. The page's `.md` twin exports it back to

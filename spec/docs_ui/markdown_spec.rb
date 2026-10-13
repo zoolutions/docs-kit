@@ -215,6 +215,12 @@ RSpec.describe DocsUI::Markdown do
       expect(html).not_to include("<em>")
     end
 
+    it "keeps a word boundary where the description breaks across lines" do
+      html = render_md("![first line\nsecond line](a.png)")
+
+      expect(html).to include('alt="first line second line"')
+    end
+
     it "renders an image title as the title attribute" do
       html = render_md('![a](a.png "The caption")')
 

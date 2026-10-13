@@ -18,8 +18,10 @@ module DocsUI
     # Any URL scheme. Only http(s) may carry one; javascript:/data:/… are dropped.
     URL_SCHEME = /\A[a-z][a-z0-9+.-]*:/i
 
-    # The descendants whose string_content makes up the alt text.
+    # The descendants whose string_content makes up the alt text; a soft or hard
+    # line break between them becomes a space so words don't run together.
     ALT_TEXT_NODES = %i[text code].freeze
+    ALT_BREAK_NODES = %i[softbreak linebreak].freeze
 
     private
 
@@ -47,7 +49,11 @@ module DocsUI
     # Commonmarker 2 has no plain-text export, so the alt is the image's text
     # (and inline code) descendants joined — emphasis markup is dropped.
     def alt_text(node)
-      node.walk.filter_map { |n| n.string_content if ALT_TEXT_NODES.include?(n.type) }.join
+      node.walk.filter_map do |n|
+        if ALT_TEXT_NODES.include?(n.type) then n.string_content
+        elsif ALT_BREAK_NODES.include?(n.type) then " "
+        end
+      end.join
     end
   end
 end
