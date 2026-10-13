@@ -86,6 +86,12 @@ bundle exec rspec
   `javascript_importmap_tags` loads, and `config.docs_kit.auto_pin = false` (in
   `config/application.rb`) keeps the gem's `docs-nav` pin out of the host's
   shared map. Unset, the head is unchanged. (#93)
+- **`DocsUI::Page` title, description and eyebrow per instance.** The page now
+  reads `#title`, `#description` and `#eyebrow`, which default to the class
+  macros, so one page class can render many records (`def title = @widget.name`)
+  without an anonymous subclass per render. The `eyebrow`, `description` and
+  `on_page` macros inherit from a parent page when unset. Pages using only the
+  class macros render byte-identically. (#95)
 
 ## [1.1.1] and earlier
 
