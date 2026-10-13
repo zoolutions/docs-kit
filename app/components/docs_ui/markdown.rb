@@ -128,8 +128,11 @@ module DocsUI
       render DocsUI::Code.new(node.string_content, lexer:)
     end
 
+    # A link keeps its href only for an allowed scheme (MarkdownImages::
+    # LINK_SCHEMES) or none at all; otherwise the text renders bare.
     def node_link(node)
-      a(href: node.url) { visit_children(node) }
+      href = link_href(node.url)
+      href ? a(href:) { visit_children(node) } : visit_children(node)
     end
 
     def node_list(node)

@@ -24,6 +24,34 @@ RSpec.describe DocsUI::Markdown do
     expect(html).to include('<a href="https://example.com">link</a>')
   end
 
+  # A link href is only ever http(s), mailto:, tel:, or scheme-less (relative,
+  # root-relative, protocol-relative, #anchor). Any other scheme (javascript:,
+  # data:, vbscript:) renders the link text with no <a> — the same guard images
+  # have, so page Markdown can't ship a script-bearing href.
+  describe "link schemes" do
+    it "drops the <a> for a javascript: href but keeps its text" do
+      html = render_md("Click [here](javascript:alert(1)) now.")
+
+      expect(html).to include("Click here now.")
+      expect(html).not_to include("<a")
+      expect(html).not_to include("javascript:")
+    end
+
+    it "drops a data: href and a whitespace-obfuscated scheme" do
+      html = render_md("[a](data:text/html,x) [b](java&#9;script:alert(1)) [c](JAVASCRIPT:x)")
+
+      expect(html).not_to include("<a")
+      expect(html).not_to include("script:")
+    end
+
+    it "keeps http(s), mailto:, tel: and scheme-less hrefs" do
+      hrefs = %w[http://x.io mailto:me@x.io tel:+1 /docs #top //cdn.io/x other.md]
+      html = render_md(hrefs.map { |h| "[x](#{h})" }.join(" "))
+
+      hrefs.each { |href| expect(html).to include(%(<a href="#{href}">)) }
+    end
+  end
+
   it "renders inline code as a <code> element (gets the [&_code] Prose treatment)" do
     html = render_md("Call `bundle install` first.")
 
