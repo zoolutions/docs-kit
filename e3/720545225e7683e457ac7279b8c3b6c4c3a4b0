@@ -1,0 +1,34 @@
+CHANGELOG.md
+  s_36f524862602fd::t_78d301173830d2 70-76
+app/components/docs_ui/markdown.rb
+  s_36f524862602fd::t_89cbc45b615e16 39
+  s_36f524862602fd::t_403261537e67ee 38
+  s_36f524862602fd::t_41b679ebc808eb 37
+  s_36f524862602fd::t_bc586bc7c8d462 94
+spec/docs_ui/markdown_spec.rb
+  s_36f524862602fd::t_ca530784c56de3 174-254
+spec/docs_kit/markdown_export_spec.rb
+  s_36f524862602fd::t_ca530784c56de3 314-321
+docs/app/views/docs/pages/markdown.rb
+  s_36f524862602fd::t_0c2eb088500b42 151-161
+  s_36f524862602fd::t_b52e0bc42671ce 102
+app/components/docs_ui/markdown_images.rb
+  s_36f524862602fd::t_37b784056b35ce 10-11
+  s_36f524862602fd::t_9b0d8ab610059e 1-9,12-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e3720545225e7683e457ac7279b8c3b6c4c3a4b0",
+  "prompts": {},
+  "sessions": {
+    "s_36f524862602fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db225b1a-6c0d-468c-9d77-c90cbe77f720",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
