@@ -34,6 +34,9 @@ module DocsUI
     TABLE_WRAPPER = "not-prose my-4 overflow-x-auto rounded-box border border-base-300"
     TABLE_CLASSES = "table table-sm table-zebra"
 
+    # ![alt](src) → <img>, asset-pipeline resolved (see MarkdownImages).
+    include MarkdownImages
+
     # Render source as INLINE markdown: no Prose wrapper div, and a single
     # top-level paragraph is unwrapped so its inline children (strong/em/code/
     # link) sit directly in the surrounding element. Used for a [:md, "…"] table
@@ -88,9 +91,7 @@ module DocsUI
 
     def node_document(node) = visit_children(node)
 
-    def node_paragraph(node)
-      p { visit_children(node) }
-    end
+    def node_paragraph(node) = p { visit_children(node) }
 
     # Demote so Markdown headings never collide with the page masthead/section
     # headings: h1→h3, h2→h4, anything deeper caps at h4.

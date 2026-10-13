@@ -171,6 +171,87 @@ RSpec.describe DocsUI::Markdown do
     expect(html).not_to include("<td")
   end
 
+  # ![alt](src "title") — an <img> whose src resolves through the site's asset
+  # pipeline (image_path) for a relative path, verbatim for an absolute one.
+  describe "images" do
+    # A subclass that reports a view context and resolves image_path the way
+    # Propshaft does — the seam meta_tags_spec stubs for image_url.
+    def render_with_pipeline(source)
+      Class.new(described_class) do
+        def view_context = :present
+        def image_path(path) = "/assets/#{path.sub('.png', '-abc123.png')}"
+      end.new(source).call
+    end
+
+    it "resolves a relative src through the asset pipeline" do
+      html = render_with_pipeline("![Alt text](dir/shot.png)")
+
+      expect(html).to include('src="/assets/dir/shot-abc123.png"')
+      expect(html).to include('alt="Alt text"')
+      expect(html).to include('loading="lazy"')
+    end
+
+    it "uses the relative src verbatim with no view context (isolated render)" do
+      html = render_md("![Alt text](dir/shot.png)")
+
+      expect(html).to include('<img src="dir/shot.png"')
+    end
+
+    it "keeps an absolute, protocol-relative or root-relative URL verbatim" do
+      html = render_with_pipeline(<<~MD)
+        ![a](https://example.com/a.png) ![b](//cdn.example.com/b.png) ![c](/static/c.png)
+      MD
+
+      expect(html).to include('src="https://example.com/a.png"')
+      expect(html).to include('src="//cdn.example.com/b.png"')
+      expect(html).to include('src="/static/c.png"')
+      expect(html).not_to include("abc123")
+    end
+
+    it "builds the alt from the description's text, dropping inline markup" do
+      html = render_md("![*Emphasised* `alt`](a.png)")
+
+      expect(html).to include('alt="Emphasised alt"')
+      expect(html).not_to include("<em>")
+    end
+
+    it "renders an image title as the title attribute" do
+      html = render_md('![a](a.png "The caption")')
+
+      expect(html).to include('title="The caption"')
+    end
+
+    it "omits the title attribute when the image has none" do
+      expect(render_md("![a](a.png)")).not_to include("title=")
+    end
+
+    it "styles the image like the kit's bordered boxes" do
+      expect(render_md("![a](a.png)")).to include(DocsUI::Markdown::IMAGE_CLASSES)
+    end
+
+    it "escapes the alt text (Phlex attribute escaping)" do
+      html = render_md('![say "hi" <b>](a.png)')
+
+      expect(html).to include('alt="say &quot;hi&quot;')
+      expect(html).not_to include("<b>")
+    end
+
+    %w[javascript:alert(1) JaVaScRiPt:alert(1) data:image/png;base64,AAAA vbscript:x].each do |src|
+      it "renders no <img> for an unsafe #{src.split(':').first} source" do
+        html = render_md("![x](#{src})")
+
+        expect(html).not_to include("<img")
+        expect(html).not_to include(src)
+      end
+    end
+
+    it "renders no <img> for a scheme hidden behind a control character" do
+      html = render_md("![x](<java\tscript:alert(1)>)")
+
+      expect(html).not_to include("<img")
+    end
+  end
+
   # DocsUI::Markdown.inline renders inline markdown for a [:md, "…"] table cell:
   # no Prose wrapper div, and a single top-level paragraph is unwrapped so its
   # inline children sit directly in the surrounding element.
