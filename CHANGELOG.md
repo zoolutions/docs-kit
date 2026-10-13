@@ -73,6 +73,12 @@ bundle exec rspec
   globs (`*.yml` → yaml, `Dockerfile` → docker, `*.sh` → shell, …). An explicit
   `lexer:` still wins, and a block with neither (or an unguessable filename)
   stays Ruby, so existing output is unchanged.
+- **A dedicated docs import map.** `c.importmap_entry_point` (default
+  `"application"`) and `c.importmap` (an `Importmap::Map` or a callable
+  returning one, resolved per render) choose what the Shell's
+  `javascript_importmap_tags` loads, and `config.docs_kit.auto_pin = false` (in
+  `config/application.rb`) keeps the gem's `docs-nav` pin out of the host's
+  shared map. Unset, the head is unchanged. (#93)
 
 ## [1.1.1] and earlier
 

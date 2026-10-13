@@ -241,6 +241,41 @@ RSpec.describe DocsKit::Configuration do
     end
   end
 
+  describe "#importmap_entry_point" do
+    it "defaults to \"application\" (javascript_importmap_tags' own default)" do
+      expect(described_class.new.importmap_entry_point).to eq("application")
+    end
+
+    it "is overridable so the docs can load their own entry point" do
+      DocsKit.configure { |c| c.importmap_entry_point = "docs" }
+
+      expect(DocsKit.configuration.importmap_entry_point).to eq("docs")
+    end
+  end
+
+  describe "#resolved_importmap" do
+    it "is nil by default (the Shell then uses the host's default map)" do
+      expect(described_class.new.resolved_importmap).to be_nil
+    end
+
+    it "returns a configured map as-is" do
+      map = Object.new
+      DocsKit.configure { |c| c.importmap = map }
+
+      expect(DocsKit.configuration.resolved_importmap).to be(map)
+    end
+
+    it "calls a callable on every read, so a map rebuilt on reload is picked up" do
+      maps = [Object.new, Object.new]
+      DocsKit.configure { |c| c.importmap = -> { maps.shift } }
+
+      first = DocsKit.configuration.resolved_importmap
+      second = DocsKit.configuration.resolved_importmap
+
+      expect(first).not_to be(second)
+    end
+  end
+
   describe "#search_shortcuts" do
     it "defaults to \"/\" and the platform \"mod+k\" chord" do
       shortcuts = described_class.new.search_shortcuts
