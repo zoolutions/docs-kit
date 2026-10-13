@@ -72,9 +72,13 @@ module DocsUI
     # injected by the controller under the active nav link (no content slot).
     def content_toc? = %i[panel toggle].include?(@on_page)
 
+    # "Page · Suffix", or just the suffix on a title-less page. The suffix is
+    # resolved per render (a callable title_suffix/brand → this request's value).
+    def document_title = [@title, config.title_suffix_text].compact.join(" · ")
+
     def render_head
       head do
-        title { [@title, config.title_suffix].compact.join(" · ") }
+        title { document_title }
         meta(charset: "utf-8")
         meta(name: "viewport", content: "width=device-width,initial-scale=1")
         # SEO / social-share tags (description, Open Graph, Twitter Card,
@@ -193,9 +197,9 @@ module DocsUI
     # text brand stays the mark's accessible-name fallback.
     def brand_mark
       if (logo = config.brand_logo)
-        render DocsUI::Logo.new(logo, class: "h-6 w-auto", label: config.brand)
+        render DocsUI::Logo.new(logo, class: "h-6 w-auto", label: config.brand_text)
       else
-        plain config.brand
+        plain config.brand_text
       end
     end
 

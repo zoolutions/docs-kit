@@ -59,6 +59,30 @@ RSpec.describe DocsUI::Sidebar do
       expect(html).to include("<svg")
       expect(html).to include("badge").and include("v1.2")
     end
+
+    it "renders a callable brand's value, resolved per render" do
+      current = +"Acme"
+      DocsKit.configure do |c|
+        c.brand = -> { current }
+        c.nav_storage_key = "docs"
+      end
+      first = header_only.new.call
+      current.replace("Globex")
+      second = header_only.new.call
+
+      expect(first).to include(">Acme</a>")
+      expect(second).to include(">Globex</a>")
+    end
+
+    it "names the mark with a callable brand's value" do
+      DocsKit.configure do |c|
+        c.brand = -> { "Acme" }
+        c.nav_storage_key = "docs"
+        c.brand_logo = { svg: "M0 0Z" }
+      end
+
+      expect(header_only.new.call).to include('aria-label="Acme"')
+    end
   end
 
   # The nav renders from config.nav_groups ({ heading => { subgroup => [NavItem] } }).

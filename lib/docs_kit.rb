@@ -25,7 +25,7 @@ module DocsKit
 
     def configure
       yield(configuration)
-      configuration
+      configuration.validate!
     end
 
     def reset_configuration!

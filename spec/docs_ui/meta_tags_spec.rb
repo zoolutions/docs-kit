@@ -68,6 +68,17 @@ RSpec.describe DocsUI::MetaTags do
       expect(html).to include('<meta property="og:type" content="website">')
     end
 
+    it "resolves a callable brand into og:site_name and og:title at render time" do
+      DocsKit.configure do |c|
+        c.brand = -> { "Acme" }
+        c.nav_storage_key = "docs"
+      end
+      html = render_tags(title: "Installation")
+
+      expect(html).to include('<meta property="og:site_name" content="Acme">')
+      expect(html).to include('<meta property="og:title" content="Installation · Acme">')
+    end
+
     it "emits og:description when a description resolves" do
       html = render_tags(description: "Reactive Phlex components.")
 

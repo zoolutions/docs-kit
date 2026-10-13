@@ -33,7 +33,7 @@ module DocsKit
     # single tight list (no blank lines between bullets), per the llmstxt.org
     # convention.
     def index(config, base_url: nil)
-      blocks = ["# #{config.brand}"]
+      blocks = ["# #{config.brand_text}"]
       tagline = config.tagline
       blocks << "> #{tagline}" if tagline && !tagline.to_s.empty?
       blocks.concat(section_blocks(config, base_url))

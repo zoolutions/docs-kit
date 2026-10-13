@@ -65,6 +65,15 @@ RSpec.describe DocsKit::McpServer do
         expect(server.name).to include("Acme Docs")
       end
 
+      it "resolves a callable brand for the name and instructions" do
+        config = configure
+        config.brand = -> { "Globex Docs" }
+        built = described_class.build(config, base_url: "https://acme.dev")
+
+        expect(built.name).to eq("Globex Docs")
+        expect(built.instructions).to include("tools for Globex Docs.")
+      end
+
       it "sets instructions from the tagline and points agents at /llms.txt" do
         expect(server.instructions).to include("Everything about Acme.")
         expect(server.instructions).to include("/llms.txt")

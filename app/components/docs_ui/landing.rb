@@ -33,7 +33,7 @@ module DocsUI
     include Phlex::Rails::Helpers::Request
 
     def view_template
-      render DocsUI::Shell.new(title: landing.eyebrow || config.brand) do
+      render DocsUI::Shell.new(title: landing.eyebrow || config.brand_text) do
         div(class: "mx-auto max-w-5xl") do
           hero
           feature_grid
@@ -78,7 +78,7 @@ module DocsUI
     # (the one bit of markdown we honor, so a site can accent a word without HTML).
     def heading
       h1(class: "text-4xl font-bold tracking-tight md:text-5xl") do
-        (landing.title || config.brand).to_s.split(/\*\*(.+?)\*\*/).each_with_index do |part, index|
+        (landing.title || config.brand_text).to_s.split(/\*\*(.+?)\*\*/).each_with_index do |part, index|
           next if part.empty?
 
           index.odd? ? span(class: "text-primary") { part } : plain(part)

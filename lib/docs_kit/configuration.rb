@@ -557,12 +557,52 @@ module DocsKit
 
     public
 
+    # The localStorage namespace. A callable brand can't be slugged: the key must
+    # be stable per browser, not per request, so a callable brand needs an
+    # explicit c.nav_storage_key (checked again by DocsKit.configure).
     def nav_storage_key
-      @nav_storage_key || @brand.to_s.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-+|-+\z/, "")
+      return @nav_storage_key if @nav_storage_key
+      if @brand.respond_to?(:call)
+        raise DocsKit::Error,
+              "c.brand is a callable, so set c.nav_storage_key to a stable key " \
+              "(the sidebar/theme localStorage namespace must not change per request)"
+      end
+
+      @brand.to_s.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-+|-+\z/, "")
     end
 
+    # The raw configured suffix (or the raw brand when unset). The chrome reads
+    # #title_suffix_text, which resolves a callable.
     def title_suffix
       @title_suffix || @brand
+    end
+
+    # The rendered brand. A String is returned as-is; a zero-arity callable is
+    # invoked on every read (never memoize it — the point is a per-request
+    # value, e.g. -> { Current.tenant_name }).
+    def brand_text
+      resolve_text(@brand).to_s
+    end
+
+    # True when the brand is a callable, i.e. anything that embeds the brand
+    # (the chrome, llms.txt) may differ per request and must not be stored in a
+    # shared cache.
+    def brand_per_request?
+      @brand.respond_to?(:call)
+    end
+
+    # The rendered <title>/og:title suffix: #title_suffix resolved like
+    # #brand_text, falling back to the resolved brand. nil only when both are nil,
+    # so the title join drops it instead of leaving a dangling separator.
+    def title_suffix_text
+      resolve_text(@title_suffix.nil? ? @brand : @title_suffix)
+    end
+
+    # Raises at configure time for a config the chrome can't render (today: a
+    # callable brand without a stable nav_storage_key). Called by DocsKit.configure.
+    def validate!
+      nav_storage_key
+      self
     end
 
     # Whether the built-in MCP endpoint is active: the #mcp toggle is on AND the
@@ -670,6 +710,13 @@ module DocsKit
       Object.const_get(name.to_s)
     rescue NameError
       nil
+    end
+
+    # A String-or-callable knob's value for this render: a callable is invoked
+    # and stringified, nil stays nil, anything else is stringified.
+    def resolve_text(value)
+      value = value.call if value.respond_to?(:call)
+      value&.to_s
     end
   end
 end

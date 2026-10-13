@@ -59,9 +59,9 @@ module DocsUI
     # Slightly taller than the topbar's h-6: this is the masthead.
     def brand_mark
       if (logo = config.brand_logo)
-        render DocsUI::Logo.new(logo, class: "h-7 w-auto", label: config.brand)
+        render DocsUI::Logo.new(logo, class: "h-7 w-auto", label: config.brand_text)
       else
-        plain config.brand
+        plain config.brand_text
       end
     end
 

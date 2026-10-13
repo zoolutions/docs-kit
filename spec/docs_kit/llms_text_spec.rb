@@ -58,6 +58,13 @@ RSpec.describe DocsKit::LlmsText do
       expect(index).to start_with("# docs-kit\n")
     end
 
+    it "resolves a callable brand for the H1" do
+      config = configure
+      config.brand = -> { "Acme" }
+
+      expect(described_class.index(config, base_url: "https://acme.dev")).to start_with("# Acme\n")
+    end
+
     it "renders the tagline as a blockquote under the H1" do
       expect(index).to include("\n> Shared docs chrome.\n")
     end

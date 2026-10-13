@@ -28,7 +28,7 @@ module DocsKit
       return unless mcp_available?
 
       server = MCP::Server.new(
-        name: config.brand.to_s,
+        name: config.brand_text,
         version: DocsKit::VERSION,
         instructions: instructions_for(config, base_url),
         server_context: { config:, base_url:, view_context: }
@@ -54,7 +54,7 @@ module DocsKit
       lines = []
       tagline = config.tagline
       lines << tagline.to_s if tagline && !tagline.to_s.empty?
-      lines << "Read-only documentation tools for #{config.brand}. " \
+      lines << "Read-only documentation tools for #{config.brand_text}. " \
                "Use search_docs to find sections, get_page to read a page's Markdown, " \
                "and list_pages to enumerate the docs. Full index: #{llms}."
       lines.join(" ")

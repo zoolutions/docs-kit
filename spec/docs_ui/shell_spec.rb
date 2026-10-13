@@ -134,6 +134,82 @@ RSpec.describe DocsUI::Shell do
     end
   end
 
+  # c.brand / c.title_suffix may be a callable, evaluated at render time (#92):
+  # one process, a different brand per request.
+  describe "a callable brand" do
+    let(:topbar_only) do
+      Class.new(described_class) do
+        def view_template = topbar
+      end
+    end
+
+    let(:title_only) do
+      Class.new(described_class) do
+        def view_template = title { document_title }
+      end
+    end
+
+    let(:current) { +"Acme" }
+
+    before do
+      tenant = current
+      DocsKit.configure do |c|
+        c.brand = -> { tenant.dup } # a copy, so a memoized first result would stay "Acme"
+        c.nav_storage_key = "docs"
+      end
+    end
+
+    it "renders the resolved brand in the topbar, not the Proc" do
+      html = topbar_only.new.call
+
+      expect(html).to match(%r{<a[^>]*btn-ghost[^>]*>Acme</a>})
+      expect(html).not_to include("Proc")
+    end
+
+    it "re-resolves on every render" do
+      first = topbar_only.new.call
+      current.replace("Globex")
+      second = topbar_only.new.call
+
+      expect(first).to include(">Acme</a>")
+      expect(second).to include(">Globex</a>")
+    end
+
+    it "names the brand mark with the resolved brand" do
+      DocsKit.configuration.brand_logo = { svg: "M0 0Z" }
+
+      expect(topbar_only.new.call).to include('aria-label="Acme"')
+    end
+
+    it "suffixes <title> with the resolved brand" do
+      expect(title_only.new(title: "Install").call).to eq("<title>Install · Acme</title>")
+    end
+
+    it "suffixes <title> with a callable title_suffix" do
+      DocsKit.configuration.title_suffix = -> { "#{current} docs" }
+
+      expect(title_only.new(title: "Install").call).to eq("<title>Install · Acme docs</title>")
+    end
+  end
+
+  describe "the <title> with a String brand (byte-compat)" do
+    let(:title_only) do
+      Class.new(described_class) do
+        def view_template = title { document_title }
+      end
+    end
+
+    it "joins the page title and the brand" do
+      DocsKit.configure { |c| c.brand = "Docs" }
+
+      expect(title_only.new(title: "Install").call).to eq("<title>Install · Docs</title>")
+    end
+
+    it "is just the suffix on a title-less page" do
+      expect(title_only.new.call).to eq("<title>Docs</title>")
+    end
+  end
+
   # The opt-in App Home link (config.app_link) — the way back to the hosting
   # app, rendered ONCE, right after the brand anchor. Absent config → absent
   # link, so a site that sets nothing keeps a byte-identical topbar.

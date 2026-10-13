@@ -52,7 +52,7 @@ module DocsUI
     # The full title used for og:title, identical to what Shell puts in <title>:
     # "Page · Suffix", or just the suffix on a title-less page (the home page).
     def full_title
-      [@title, config.title_suffix].compact.join(" · ")
+      [@title, config.title_suffix_text].compact.join(" · ")
     end
 
     def description_meta
@@ -67,7 +67,7 @@ module DocsUI
     def open_graph
       meta(property: "og:title", content: full_title)
       meta(property: "og:type", content: seo.og_type)
-      meta(property: "og:site_name", content: config.brand)
+      meta(property: "og:site_name", content: config.brand_text)
       open_graph_optional
     end
 

@@ -71,9 +71,12 @@ module DocsKit
     # Revalidate on the rendered body itself (so any registry/config/page change
     # busts it) plus the gem version as the etag salt. In development, always
     # re-render; production sites deploy immutably so the version etag is stable.
+    # A callable brand (#92) makes the body per-request, so the response is then
+    # `private`: a shared cache must not hand one tenant's llms.txt to another.
     def stale_llms?(body)
-      expires_in LLMS_MAX_AGE, public: true
-      stale?(etag: [DocsKit::VERSION, body], public: true)
+      shared = !docs_config.brand_per_request?
+      expires_in LLMS_MAX_AGE, public: shared
+      stale?(etag: [DocsKit::VERSION, body], public: shared)
     end
 
     # A page's Markdown twin, rendered through this controller's view context so

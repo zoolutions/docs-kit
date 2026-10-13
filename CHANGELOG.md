@@ -67,6 +67,13 @@ bundle exec rspec
 
 ### Added
 
+- **A per-request `brand` and `title_suffix`.** Both accept a zero-arity
+  callable (`c.brand = -> { Current.tenant_name }`), evaluated on every render:
+  the topbar, sidebar header, `<title>`, `og:site_name`, llms.txt and the MCP
+  server name show that request's value. A callable brand needs an explicit
+  `c.nav_storage_key`; `DocsKit.configure` raises without one. New readers
+  `Configuration#brand_text` / `#title_suffix_text`; a String brand renders
+  exactly as before. (#92)
 - **`DocsUI::Code` infers the language from `filename:`.**
   `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
   instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename

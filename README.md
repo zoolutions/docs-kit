@@ -193,6 +193,20 @@ DocsKit.configure do |c|
 end
 ```
 
+**One app, several hosts?** `brand` and `title_suffix` also take a zero-arity
+callable, evaluated on every render — the topbar, the sidebar header, `<title>`,
+`og:site_name`, llms.txt and the MCP server name all show that request's value.
+A callable brand can't name the localStorage namespace (it must stay stable per
+browser), so set `nav_storage_key` too; `DocsKit.configure` raises without it.
+
+```ruby
+DocsKit.configure do |c|
+  c.brand           = -> { Current.tenant_name }   # Current < ActiveSupport::CurrentAttributes
+  c.title_suffix    = -> { "#{Current.tenant_name} docs" } # optional; unset follows the brand
+  c.nav_storage_key = "docs"
+end
+```
+
 The nav is **derived from the registry**, so you never hand-write it. Each
 registry maps a heading to its authored pages (`Doc.nav_items`); a page that
 isn't written yet is skipped, so there are no dead links. Register a page with
