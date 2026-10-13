@@ -83,17 +83,17 @@ module Views
             end
             render DocsUI::PropTable.new(
               [
-                [ "brand", "String", '"Docs"', "Topbar + sidebar heading. Fallback for title_suffix and nav_storage_key." ],
+                [ "brand", "String or callable", '"Docs"', "Topbar + sidebar heading. Fallback for title_suffix and nav_storage_key. A callable is invoked per render (one brand per host/tenant) and requires an explicit nav_storage_key." ],
                 [ "tagline", "String, nil", "nil", "One-line summary; rendered as the llms.txt blockquote. AI-index only — the chrome never shows it." ],
                 [ "brand_href", "String", '"/"', "Where the topbar brand link points (e.g. \"/docs\" for a subpath site)." ],
-                [ "title_suffix", "String", "= brand", %(Appended to the page <title> ("Installation · Acme"). Writer only; reader falls back to brand.) ],
+                [ "title_suffix", "String or callable", "= brand", %(Appended to the page <title> ("Installation · Acme"). A callable is invoked per render; unset follows the resolved brand.) ],
                 [ "themes", "Array", "%w[dark light]", "ThemeSwitcher options; must match the daisyUI @plugin themes: block." ],
                 [ "default_theme", "String", "= themes.first", "The data-theme applied on first paint. Writer only; reader falls back to themes.first." ],
                 [ "version_badge", "String or callable", "nil", "Short badge string for the sidebar header. A callable is invoked; a plain String is used as-is; nil = no badge." ],
                 [ "stylesheets", "Array", "%w[application]", "Stylesheet logical names linked in <head>, in order." ],
                 [ "default_group_icon", "String", '"file-text"', "lucide icon for a nav group with no explicit icon." ],
                 [ "icon_library", "String, nil", '"lucide"', "The RailsIcons library the chrome renders its own icons from. nil defers to the host default." ],
-                [ "nav_storage_key", "String", "= brand slug", "Namespaces the sidebar localStorage (collapse state) so two sites on one origin don't collide. Writer only." ],
+                [ "nav_storage_key", "String", "= brand slug", "Namespaces the sidebar localStorage (collapse state) so two sites on one origin don't collide. Required when brand is a callable. Writer only." ],
                 [ "page_markdown_action", "Boolean", "true", "Show the \"Markdown\" masthead action (a link to the .md twin). false hides it; the .md route still works." ],
                 [ "on_page_default", ":panel | :toggle | :sidebar | false", ":panel", "Default auto-TOC placement when a page doesn't set its own on_page:." ]
               ]

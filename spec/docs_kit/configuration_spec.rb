@@ -382,6 +382,123 @@ RSpec.describe DocsKit::Configuration do
     end
   end
 
+  # brand and title_suffix accept a String or a zero-arity callable, resolved
+  # per read so one process can serve a different brand per request (#92).
+  describe "#brand_text" do
+    it "returns a String brand as-is (byte-compat)" do
+      config = described_class.new
+      config.brand = "Acme"
+
+      expect(config.brand_text).to eq("Acme")
+    end
+
+    it "defaults to \"Docs\"" do
+      expect(described_class.new.brand_text).to eq("Docs")
+    end
+
+    it "calls a callable brand on every read" do
+      current = +"Acme"
+      config = described_class.new
+      config.brand = -> { current }
+
+      expect(config.brand_text).to eq("Acme")
+      current.replace("Globex")
+      expect(config.brand_text).to eq("Globex")
+    end
+
+    it "coerces a callable's result to a String" do
+      config = described_class.new
+      config.brand = -> { :acme }
+
+      expect(config.brand_text).to eq("acme")
+    end
+
+    it "keeps the raw value on the #brand reader" do
+      callable = -> { "Acme" }
+      config = described_class.new
+      config.brand = callable
+
+      expect(config.brand).to be(callable)
+    end
+  end
+
+  describe "#title_suffix_text" do
+    it "falls back to the resolved String brand when unset" do
+      config = described_class.new
+      config.brand = "Acme"
+
+      expect(config.title_suffix_text).to eq("Acme")
+    end
+
+    it "falls back to the resolved callable brand when unset" do
+      config = described_class.new
+      config.brand = -> { "Acme" }
+
+      expect(config.title_suffix_text).to eq("Acme")
+    end
+
+    it "returns an explicit String suffix" do
+      config = described_class.new
+      config.title_suffix = "Acme docs"
+
+      expect(config.title_suffix_text).to eq("Acme docs")
+    end
+
+    it "calls a callable suffix" do
+      config = described_class.new
+      config.title_suffix = -> { "Globex docs" }
+
+      expect(config.title_suffix_text).to eq("Globex docs")
+    end
+
+    it "is nil when both the suffix and the brand are nil (no dangling separator)" do
+      config = described_class.new
+      config.brand = nil
+
+      expect(config.title_suffix_text).to be_nil
+    end
+  end
+
+  describe "#nav_storage_key" do
+    it "slugs a String brand when unset (byte-compat)" do
+      config = described_class.new
+      config.brand = "Phlex Reactive!"
+
+      expect(config.nav_storage_key).to eq("phlex-reactive")
+    end
+
+    it "returns an explicit key with a callable brand" do
+      config = described_class.new
+      config.brand = -> { "Acme" }
+      config.nav_storage_key = "acme"
+
+      expect(config.nav_storage_key).to eq("acme")
+    end
+
+    it "raises naming c.nav_storage_key for a callable brand with no explicit key" do
+      config = described_class.new
+      config.brand = -> { "Acme" }
+
+      expect { config.nav_storage_key }.to raise_error(DocsKit::Error, /c\.nav_storage_key/)
+    end
+  end
+
+  describe "DocsKit.configure with a callable brand" do
+    it "raises at configure time when c.nav_storage_key is missing" do
+      expect { DocsKit.configure { |c| c.brand = -> { "Acme" } } }
+        .to raise_error(DocsKit::Error, /c\.nav_storage_key/)
+    end
+
+    it "accepts a callable brand alongside an explicit c.nav_storage_key" do
+      expect do
+        DocsKit.configure do |c|
+          c.brand = -> { "Acme" }
+          c.nav_storage_key = "acme"
+        end
+      end.not_to raise_error
+    end
+  end
+
   describe "#version_badge_text" do
     it "returns nil when unset" do
       expect(described_class.new.version_badge_text).to be_nil
