@@ -1,0 +1,36 @@
+spec/docs_kit/configuration_spec.rb
+  s_36f524862602fd::t_561a65b67c9154 385-413,424-509,417,419-420,422-423
+  s_36f524862602fd::t_11613dd61b5fba 414-415,416,418,421
+spec/docs_ui/shell_spec.rb
+  s_36f524862602fd::t_82833fe39338e6 137-156,158-212
+  s_36f524862602fd::t_11613dd61b5fba 157
+lib/docs_kit/configuration.rb
+  s_36f524862602fd::t_c460dd56385e80 560-562,564-571,574-575,580-584,594-605
+  s_36f524862602fd::t_11613dd61b5fba 585-586,587-591
+  s_36f524862602fd::t_2250616540b88d 714-720,592-593
+spec/docs_kit/llms_controller_spec.rb
+  s_36f524862602fd::t_11613dd61b5fba 51-56
+docs/app/views/docs/pages/configuration.rb
+  s_36f524862602fd::t_db814137fa2866 88
+  s_36f524862602fd::t_7baeb95a97bbb4 91
+  s_36f524862602fd::t_e90a244bb42460 98
+  s_36f524862602fd::t_11613dd61b5fba 72-74
+app/controllers/docs_kit/llms_controller.rb
+  s_36f524862602fd::t_11613dd61b5fba 74-75,77-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f7deffad5df1bad73e42d920904b19a7bb792544",
+  "prompts": {},
+  "sessions": {
+    "s_36f524862602fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db225b1a-6c0d-468c-9d77-c90cbe77f720",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
