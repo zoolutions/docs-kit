@@ -1,0 +1,51 @@
+lib/docs_kit/llms_text.rb
+  ai_agent 36
+spec/docs_ui/meta_tags_spec.rb
+  s_36f524862602fd::t_bac9d7ec94aadf 71-81
+spec/docs_kit/mcp_server_spec.rb
+  s_36f524862602fd::t_d53e784692bb4f 68-76
+spec/docs_kit/configuration_spec.rb
+  s_36f524862602fd::t_561a65b67c9154 350-466
+spec/docs_ui/shell_spec.rb
+  s_36f524862602fd::t_82833fe39338e6 137-212
+spec/docs_ui/sidebar_spec.rb
+  s_36f524862602fd::t_0ecab59b81c725 62-85
+app/components/docs_ui/meta_tags.rb
+  ai_agent 55,70
+spec/docs_kit/llms_text_spec.rb
+  s_36f524862602fd::t_0727728b0e41bf 61,64-67
+  s_36f524862602fd::t_2efb47be5724ae 62-63
+lib/docs_kit/configuration.rb
+  s_36f524862602fd::t_2250616540b88d 688-694
+  s_36f524862602fd::t_c460dd56385e80 547-549,551-558,561-562,567-585
+app/components/docs_ui/shell.rb
+  s_36f524862602fd::t_da966458840428 75-78,81
+docs/app/views/docs/pages/configuration.rb
+  s_36f524862602fd::t_7baeb95a97bbb4 89
+  s_36f524862602fd::t_e90a244bb42460 96
+  s_36f524862602fd::t_db814137fa2866 86
+app/components/docs_ui/landing.rb
+  ai_agent 36,81
+README.md
+  s_36f524862602fd::t_72aa503ef0ce37 196-209
+lib/docs_kit.rb
+  s_36f524862602fd::t_37046a7c7e99a4 28
+CHANGELOG.md
+  s_36f524862602fd::t_673d817522ed0f 70-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "851e9e3e3de50eb5f35a28dc916e225ca759950a",
+  "prompts": {},
+  "sessions": {
+    "s_36f524862602fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db225b1a-6c0d-468c-9d77-c90cbe77f720",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
