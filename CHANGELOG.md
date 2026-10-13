@@ -74,6 +74,14 @@ bundle exec rspec
   `c.nav_storage_key`; `DocsKit.configure` raises without one. New readers
   `Configuration#brand_text` / `#title_suffix_text`; a String brand renders
   exactly as before. (#92)
+- **Markdown images render.** `![alt](path "title")` in an `md` island now
+  renders a lazy-loaded `<img>` (it rendered nothing before). In a Rails view
+  a relative path resolves through the site's asset pipeline (`image_path`;
+  off a request it is kept as written); an absolute,
+  protocol-relative or root-relative URL is kept as written; the alt is the
+  description's plain text. A `javascript:`, `data:` or other non-http(s)
+  scheme renders no image. The page's `.md` twin exports it back to
+  `![alt](src)`. (#94)
 - **`DocsUI::Code` infers the language from `filename:`.**
   `DocsUI::Code(<<~YAML, filename: "config/deploy.yml")` now highlights as YAML
   instead of Ruby: with no `lexer:`, the lexer is guessed from Rouge's filename

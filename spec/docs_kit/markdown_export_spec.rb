@@ -311,6 +311,14 @@ RSpec.describe DocsKit::MarkdownExport do
 
       expect(md).to include("![Logo](/logo.png)")
     end
+
+    it "round-trips a Markdown image authored through DocsUI::Markdown" do
+      page = docs_content { render DocsUI::Markdown.new("![Alt text](https://example.com/shot.png)") }
+
+      md = to_md(page)
+
+      expect(md).to include("![Alt text](https://example.com/shot.png)")
+    end
   end
 
   describe "unknown / structural elements" do

@@ -99,7 +99,7 @@ module Views
 
         def gfm_section
           DocsUI::Section("The GFM you can write",
-                          description: "Headings, lists, tables, fenced code, links, blockquotes — parsed by commonmarker.") do
+                          description: "Headings, lists, tables, fenced code, images, links, blockquotes — parsed by commonmarker.") do
             md <<~'MD'
               Islands parse **GitHub-Flavored Markdown** with commonmarker (v2 /
               comrak). The full everyday vocabulary is here:
@@ -147,6 +147,17 @@ module Views
 
               No fence language — or an unknown one — falls back to plaintext and
               never raises.
+
+              ## Images
+
+              `![alt](path "title")` renders a lazy-loaded `<img>`. A relative
+              path resolves through your site's asset pipeline — `og/og.png`
+              becomes the digested `/assets/og/og-….png` — while an absolute,
+              protocol-relative or root-relative URL is used as written. The alt
+              is the description's plain text, and a `javascript:` or `data:`
+              source renders nothing:
+
+              ![The docs-kit landing page](og/og.png "This site's social-share card")
 
               ## Links, blockquotes, rules
 
