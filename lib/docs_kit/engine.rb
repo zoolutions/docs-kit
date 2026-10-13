@@ -36,10 +36,17 @@ module DocsKit
       app.config.assets.paths << JAVASCRIPT_PATH.to_s if app.config.respond_to?(:assets)
     end
 
+    # Host-facing engine options. `config.docs_kit.auto_pin = false` (in
+    # config/application.rb) keeps the gem's pin out of the host's shared import
+    # map, for a host that pins `docs_kit/controllers` in a dedicated docs map.
+    config.docs_kit = ActiveSupport::OrderedOptions.new
+    config.docs_kit.auto_pin = true
+
     # Auto-pin the controller for importmap-rails consumers, so a host app gets
     # `docs_kit/controllers/docs_nav_controller` with no manual pin.
     initializer "docs_kit.importmap", before: "importmap" do |app|
       next unless app.config.respond_to?(:importmap)
+      next unless app.config.docs_kit.auto_pin
 
       importmap = app.config.importmap
       importmap.paths << root.join("config/importmap.rb") if importmap.respond_to?(:paths)

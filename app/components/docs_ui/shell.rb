@@ -90,8 +90,18 @@ module DocsUI
         meta(name: "turbo-refresh-scroll", content: "preserve")
         config.stylesheets.each { |sheet| stylesheet_link_tag(sheet, data: { turbo_track: "reload" }) }
         theme_restore_script
-        javascript_importmap_tags
+        importmap_tags
       end
+    end
+
+    # The import map tags for config.importmap_entry_point, from config.importmap
+    # when one is set. With nothing configured this is the helper's own default
+    # call, so the head matches a Shell that predates the knobs.
+    def importmap_tags
+      map = config.resolved_importmap
+      return javascript_importmap_tags(config.importmap_entry_point) if map.nil?
+
+      javascript_importmap_tags(config.importmap_entry_point, importmap: map)
     end
 
     # Restore the persisted theme BEFORE first paint so there's no flash of the

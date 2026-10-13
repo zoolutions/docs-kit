@@ -1051,6 +1051,39 @@ server round-trip:
   of three placements, auto-hiding on short pages. No server-side knowledge of
   the headings, no per-page wiring.
 
+### A dedicated docs import map
+
+By default the Shell loads the host's `application` entry point from
+`Rails.application.importmap`, and the engine adds the `docs-nav` pin to that
+map. A host with several import maps can give its docs their own entry point
+and map, and keep the docs controller out of every other page's preloads:
+
+```ruby
+# config/application.rb — skip the engine's auto-pin into the shared map
+config.docs_kit.auto_pin = false
+
+# config/initializers/docs_kit.rb
+DocsKit.configure do |c|
+  c.importmap_entry_point = "docs"                          # default "application"
+  c.importmap = -> { MyApp.importmaps.fetch("docs") }       # default nil → Rails.application.importmap
+end
+```
+
+```ruby
+# config/importmaps/docs.rb — drawn into the "docs" Importmap::Map
+pin "docs"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+pin "@hotwired/stimulus", to: "stimulus.min.js"
+pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
+pin_all_from DocsKit::Engine.root.join("app/javascript/docs_kit/controllers"),
+             under: "docs_kit/controllers", to: "docs_kit/controllers"
+```
+
+`c.importmap` takes an `Importmap::Map` or a callable returning one; a callable
+is resolved on every render, so a map rebuilt on code reload is picked up. The
+`docs` entry point registers the controllers with
+`eagerLoadControllersFrom("docs_kit/controllers", application)`.
+
 ### On this page (auto-TOC)
 
 `DocsUI::Page` renders it automatically. The placement is a strategy — set the

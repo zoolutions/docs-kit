@@ -78,6 +78,17 @@ module DocsKit
     # stylesheets (e.g. a separate rouge theme) lists them here.
     attr_accessor :stylesheets
 
+    # The import map entry point the Shell loads. Defaults to "application"
+    # (javascript_importmap_tags' own default). A host with a dedicated docs
+    # import map names its entry point here, e.g. "docs".
+    attr_accessor :importmap_entry_point
+
+    # The import map the Shell renders: nil (the default → the host's
+    # Rails.application.importmap), an Importmap::Map, or a zero-arity callable
+    # returning one, resolved per render so a map rebuilt on code reload is
+    # picked up. Read via #resolved_importmap.
+    attr_accessor :importmap
+
     # The Rouge theme class used by DocsUI::Code for inline syntax-highlight CSS.
     # This is the BASE (light) theme, emitted un-scoped so it applies to every
     # theme unless a dark override wins (see #code_theme_dark).
@@ -307,6 +318,8 @@ module DocsKit
       @nav_registries = {}
       @version_badge = nil
       @stylesheets = %w[application]
+      @importmap_entry_point = "application"
+      @importmap = nil
       @code_theme = "Rouge::Themes::Monokai"
       @code_theme_dark = nil
       @dark_themes = DEFAULT_DARK_THEMES
@@ -607,6 +620,12 @@ module DocsKit
       return @version_badge.call if @version_badge.respond_to?(:call)
 
       @version_badge.to_s
+    end
+
+    # The import map the Shell renders, or nil for the host's default map. A
+    # callable is invoked on every read (once per render).
+    def resolved_importmap
+      @importmap.respond_to?(:call) ? @importmap.call : @importmap
     end
 
     # The default Rouge theme both #code_theme_class and #code_theme_dark_class

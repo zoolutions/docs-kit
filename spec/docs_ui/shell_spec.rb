@@ -308,4 +308,44 @@ RSpec.describe DocsUI::Shell do
       expect(html).to include('<style nonce="n">b</style>')
     end
   end
+
+  # The import map tags are a config knob (importmap_entry_point + importmap) so
+  # a host with several import maps can give its docs their own entry point and
+  # map. The real helper needs a live request, so the seam records its arguments.
+  describe "the import map tags" do
+    let(:importmap_only) do
+      Class.new(described_class) do
+        def view_template = importmap_tags
+
+        def javascript_importmap_tags(*args, **kwargs)
+          plain("entry=#{args.inspect} kwargs=#{kwargs.keys.inspect} map=#{kwargs[:importmap]}")
+        end
+      end
+    end
+
+    it "calls the helper with only the default entry point (the 1.2.1 output)" do
+      html = importmap_only.new.call
+
+      expect(html).to eq("entry=[&quot;application&quot;] kwargs=[] map=")
+    end
+
+    it "renders the configured entry point and map" do
+      DocsKit.configure do |c|
+        c.importmap_entry_point = "docs"
+        c.importmap = "docs-map"
+      end
+      html = importmap_only.new.call
+
+      expect(html).to include("entry=[&quot;docs&quot;]")
+      expect(html).to include("map=docs-map")
+    end
+
+    it "resolves a callable map on every render" do
+      maps = %w[first-map second-map]
+      DocsKit.configure { |c| c.importmap = -> { maps.shift } }
+
+      expect(importmap_only.new.call).to include("map=first-map")
+      expect(importmap_only.new.call).to include("map=second-map")
+    end
+  end
 end
