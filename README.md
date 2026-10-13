@@ -1062,15 +1062,18 @@ and map, and keep the docs controller out of every other page's preloads:
 # config/application.rb — skip the engine's auto-pin into the shared map
 config.docs_kit.auto_pin = false
 
-# config/initializers/docs_kit.rb
+# config/initializers/docs_kit.rb — build the second map (importmap-rails has no
+# registry for extra maps; the host owns it) and point the docs chrome at it
+DOCS_IMPORTMAP = Importmap::Map.new.draw(Rails.root.join("config/importmaps/docs.rb"))
+
 DocsKit.configure do |c|
-  c.importmap_entry_point = "docs"                          # default "application"
-  c.importmap = -> { MyApp.importmaps.fetch("docs") }       # default nil → Rails.application.importmap
+  c.importmap_entry_point = "docs"          # default "application"
+  c.importmap = -> { DOCS_IMPORTMAP }       # default nil → Rails.application.importmap
 end
 ```
 
 ```ruby
-# config/importmaps/docs.rb — drawn into the "docs" Importmap::Map
+# config/importmaps/docs.rb — drawn into the docs Importmap::Map above
 pin "docs"
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"

@@ -20,7 +20,7 @@ RSpec.describe DocsKit::Engine do
   end
 
   it "defaults config.docs_kit.auto_pin to true" do
-    expect(Rails::Railtie::Configuration.new.docs_kit.auto_pin).to be(true)
+    expect(described_class.config.docs_kit.auto_pin).to be(true)
   end
 
   it "adds the gem's pins to the host import map by default" do
