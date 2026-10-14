@@ -33,6 +33,7 @@ require "phlex/rails"
 require "daisy_ui"
 
 require "docs_kit"
+require "conformance_kit/rspec"
 
 # The MCP server (DocsKit::McpServer) is an OPTIONAL, runtime-detected feature
 # built on the `mcp` gem — docs-kit never depends on it at runtime. The suite
