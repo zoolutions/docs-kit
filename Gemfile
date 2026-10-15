@@ -21,7 +21,7 @@ group :mcp do
 end
 
 group :development, :test do
-  gem "conformance-kit", "~> 0.1", require: false # concurrency conformance gates (zoolutions/phlex-reactive#363)
+  gem "conformance-kit", "~> 0.3", require: false # concurrency conformance gates (zoolutions/phlex-reactive#363)
   gem "rake"
   gem "rspec"
   gem "rubocop", require: false
