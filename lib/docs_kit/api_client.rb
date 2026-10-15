@@ -31,22 +31,26 @@ module DocsKit
 
   # The four generic-HTTP clients every site starts from. Order is stable
   # (curl → javascript → ruby → python) and preserved when a site merges its own.
-  ApiClient::DEFAULTS = {
-    curl: ApiClient.new(
-      label: "cURL", lexer: :curl, filename: "request.sh",
-      template: ApiTemplates.method(:curl)
-    ),
-    javascript: ApiClient.new(
-      label: "JavaScript", lexer: :javascript, filename: "request.js",
-      template: ApiTemplates.method(:javascript)
-    ),
-    ruby: ApiClient.new(
-      label: "Ruby", lexer: :ruby, filename: "request.rb",
-      template: ApiTemplates.method(:ruby)
-    ),
-    python: ApiClient.new(
-      label: "Python", lexer: :python, filename: "request.py",
-      template: ApiTemplates.method(:python)
-    )
-  }.freeze
+  # Shareable (lambdas, not Method objects, which never are), so a non-main
+  # Ractor can read the defaults.
+  ApiClient::DEFAULTS = DocsKit::Shareable.make(
+    {
+      curl: ApiClient.new(
+        label: "cURL", lexer: :curl, filename: "request.sh",
+        template: ->(request) { ApiTemplates.curl(request) }
+      ),
+      javascript: ApiClient.new(
+        label: "JavaScript", lexer: :javascript, filename: "request.js",
+        template: ->(request) { ApiTemplates.javascript(request) }
+      ),
+      ruby: ApiClient.new(
+        label: "Ruby", lexer: :ruby, filename: "request.rb",
+        template: ->(request) { ApiTemplates.ruby(request) }
+      ),
+      python: ApiClient.new(
+        label: "Python", lexer: :python, filename: "request.py",
+        template: ->(request) { ApiTemplates.python(request) }
+      )
+    }
+  )
 end

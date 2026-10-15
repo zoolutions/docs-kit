@@ -24,7 +24,9 @@ module DocsUI
   class Code < Phlex::HTML
     include Phlex::Rails::Helpers::ContentSecurityPolicyNonce
 
-    FORMATTER = Rouge::Formatters::HTML.new
+    # Frozen: Rouge's HTML formatter keeps no per-call state, so one instance
+    # serves every render (and every Ractor).
+    FORMATTER = Rouge::Formatters::HTML.new.freeze
 
     def initialize(source, lexer: nil, filename: nil)
       @source = source.to_s.strip

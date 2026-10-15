@@ -15,7 +15,7 @@ module DocsKit
     config.eager_load_paths = []
     config.paths["app"].skip_eager_load!
 
-    JAVASCRIPT_PATH = root.join("app/javascript")
+    JAVASCRIPT_PATH = root.join("app/javascript").freeze
 
     initializer "docs_kit.controller_helper" do
       ActiveSupport.on_load(:action_controller_base) do

@@ -12,12 +12,14 @@ module DocsKit
       # handed back as a warning, and a newer value is left alone.
       module V1_2_0 # rubocop:disable Naming/ClassAndModuleCamelCase -- named after the release
         DESCRIPTION = "docs-kit 1.2: Ruby >= 3.3, Bun 1.4.2, Tailwind 4.3 / daisyUI 5.7 floors, Node 24 deploy"
-        MIN_RUBY = Gem::Version.new("3.3")
+        # A String: Gem::Version.new hands out process-wide cached instances,
+        # which a constant must not freeze. Compared via Gem::Version below.
+        MIN_RUBY = "3.3"
         BUN = { from: "1.3.2", to: "1.4.2" }.freeze
         PACKAGE_FLOORS = {
-          "tailwindcss" => { from: "^4.1.18", to: "^4.3.3" },
-          "@tailwindcss/cli" => { from: "^4.1.18", to: "^4.3.3" },
-          "daisyui" => { from: "^5.6.0", to: "^5.7.47" }
+          "tailwindcss" => { from: "^4.1.18", to: "^4.3.3" }.freeze,
+          "@tailwindcss/cli" => { from: "^4.1.18", to: "^4.3.3" }.freeze,
+          "daisyui" => { from: "^5.6.0", to: "^5.7.47" }.freeze
         }.freeze
         DEPLOY_CALL = %r{zoolutions/docs-kit/\.github/workflows/deploy\.yml@(\S+)}
 
@@ -112,7 +114,7 @@ module DocsKit
 
         def below_min_ruby?(value)
           version = version_of(value)
-          version ? version < MIN_RUBY : false
+          version ? version < Gem::Version.new(MIN_RUBY) : false
         end
       end
     end

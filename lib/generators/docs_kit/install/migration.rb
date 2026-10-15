@@ -14,13 +14,18 @@ module DocsKit
     # and hands back strings for whatever needs a human. A `nil` return means
     # "nothing to warn about".
     class Migration
-      attr_reader :to, :description
+      attr_reader :description
 
+      # Keeps `to` as a frozen String, so a migration list can be made
+      # Ractor-shareable without freezing Gem::Version's process-wide cached
+      # instances; #to hands back the Gem::Version.
       def initialize(to:, description:, &block)
-        @to = Gem::Version.new(to.to_s)
+        @to = -to.to_s
         @description = description
         @block = block
       end
+
+      def to = Gem::Version.new(@to)
 
       # Run the transform against the site. Returns the (possibly empty) list of
       # manual-cleanup warnings — never nil, so callers can flat-map safely.
