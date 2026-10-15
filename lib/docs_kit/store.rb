@@ -12,9 +12,10 @@ module DocsKit
   # cannot read it, so it keeps its own values in Ractor-local storage instead
   # (not locked: one Ractor's threads may race to build a value, as with any `||=`).
   module Store
-    # The main-only fallback, created at load and guarded by @fallback_lock.
+    # rubocop:disable ThreadSafety/MutableClassInstanceVariable -- main-only fallback, guarded by @fallback_lock
     @fallback_lock = Mutex.new
     @fallback_values = {}
+    # rubocop:enable ThreadSafety/MutableClassInstanceVariable
 
     class << self
       def fetch(key, &init)

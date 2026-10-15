@@ -106,7 +106,9 @@ module DocsKit
 
       port = free_port
       app = Rails.application
-      server_thread = Thread.new do
+      # The docs_kit:og rake task's one-shot local server (a CLI, never a request
+      # path): one thread, killed in the ensure below.
+      server_thread = Thread.new do # rubocop:disable ThreadSafety/NewThread
         Rackup::Handler.get("webrick").run(app, Port: port, Host: "127.0.0.1", Logger: null_logger, AccessLog: [])
       rescue LoadError
         Rack::Handler.get("webrick").run(app, Port: port, Host: "127.0.0.1", Logger: null_logger, AccessLog: [])

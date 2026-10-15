@@ -155,4 +155,39 @@ RSpec.describe "DocsUI::Page.on_page" do # rubocop:disable RSpec/DescribeClass
       expect(resolve_description(body: body)).to eq('"Explicit."')
     end
   end
+
+  # The class macros run in a page's class body at load and make each value
+  # shareable on write, so request threads (and a non-main Ractor) only ever
+  # read frozen values. Same isolated child process (Page needs Rails to load).
+  define_method(:macro_values_shareable?) do
+    script = <<~RUBY
+      $LOAD_PATH.unshift "#{gem_root}/lib"
+      require "active_support/all"
+      require "action_dispatch"
+      require "phlex/rails"
+      require "daisy_ui"
+      module Rails
+        def self.application
+          @app ||= Class.new do
+            def routes = @routes ||= ActionDispatch::Routing::RouteSet.new
+          end.new
+        end
+      end
+      require "docs_kit"
+      klass = Class.new(DocsUI::Page)
+      klass.title(+"Installation")
+      klass.eyebrow(+"Guide")
+      klass.description(+"Add the gem.")
+      klass.on_page(:toggle)
+      print [klass.title, klass.eyebrow, klass.description, klass.on_page].all? { Ractor.shareable?(_1) }
+    RUBY
+    stdout, stderr, status = Open3.capture3(RbConfig.ruby, "-e", script)
+    raise "child process failed: #{stderr}" unless status.success?
+
+    stdout
+  end
+
+  it "makes every class macro value Ractor-shareable on write" do
+    expect(macro_values_shareable?).to eq("true")
+  end
 end

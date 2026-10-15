@@ -18,11 +18,15 @@ require_relative "docs_kit/configuration"
 module DocsKit
   class Error < StandardError; end
 
+  # Built at load, never lazily: no first-request race to build two.
+  @configuration = Configuration.new
+
   class << self
-    # The current configuration, memoized. Reset with DocsKit.reset_configuration!.
-    def configuration
-      @configuration ||= Configuration.new
-    end
+    # The current configuration. Reset with DocsKit.reset_configuration!.
+    # Assigned at load and by reset_configuration! (boot, specs) on the main
+    # Ractor; request threads only read it. Main-only (.conformance.yml): it
+    # holds the host's per-request callables (brand, nav, version_badge, ...).
+    attr_reader :configuration
 
     # Re-opens a finalized configuration first (a development reload re-runs
     # the host's to_prepare configure), so every setting takes effect.
@@ -39,8 +43,10 @@ module DocsKit
       configuration.finalize!
     end
 
+    # A fresh default configuration (specs; a host that re-boots its config).
+    # Runs at boot or between examples, never on a request.
     def reset_configuration!
-      @configuration = Configuration.new
+      @configuration = Configuration.new # rubocop:disable ThreadSafety/ClassInstanceVariable
     end
   end
 end

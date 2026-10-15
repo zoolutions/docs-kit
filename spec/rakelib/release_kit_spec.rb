@@ -90,7 +90,9 @@ RSpec.describe ReleaseKit do
   context "when run inside a gem checkout" do
     around do |example|
       Dir.mktmpdir do |dir|
-        Dir.chdir(dir) do
+        # The release task reads the checkout relative to the working directory;
+        # examples run one at a time on one thread, and the block form restores it.
+        Dir.chdir(dir) do # rubocop:disable ThreadSafety/DirChdir
           FileUtils.mkdir_p(%w[lib/demo docs])
           File.write("lib/demo/version.rb", %(module Demo\n  VERSION = "0.3.0"\nend\n))
           File.write("lib/demo/doc_version.rb", %(module Demo\n  DOC_VERSION = "0.3.0"\nend\n))

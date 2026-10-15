@@ -8,14 +8,10 @@
 RSpec.describe DocsKit::Scoping do
   def host_for(params)
     request_params = params
+    registered = []
     Class.new do
-      class << self
-        attr_reader :around_actions
-
-        def around_action(name)
-          (@around_actions ||= []) << name
-        end
-      end
+      define_singleton_method(:around_actions) { registered }
+      define_singleton_method(:around_action) { |name| registered << name }
 
       include DocsKit::Scoping
 

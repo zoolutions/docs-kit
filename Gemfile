@@ -29,5 +29,6 @@ group :development, :test do
   gem "rubocop-performance", require: false
   gem "rubocop-rake", require: false
   gem "rubocop-rspec", require: false
+  gem "rubocop-thread_safety", ">= 0.8", require: false # conformance-kit's config/rubocop.yml (Tier 1 cops)
   gem "simplecov", require: false
 end
