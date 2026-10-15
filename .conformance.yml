@@ -21,53 +21,15 @@ main_only:
     reason: the below-3.4 fallback's lock (a copy of ConformanceKit::Store), created at load and only read on the main Ractor; non-main Ractors use Ractor-local storage and 3.4+ uses Ractor.store_if_absent
   - name: DocsKit::Store.@fallback_values
     reason: the below-3.4 fallback's storage, only touched on the main Ractor under @fallback_lock; never read on 3.4+
-  - name: DocsKit::Engine.@called_from
+  # Framework class state on the gem's own subclasses, narrowed to the
+  # framework's ivars so anything docs-kit itself kept there would still be
+  # audited.
+  - ancestor: Rails::Engine
+    ivars: ["@called_from", "@initializers", "@instance"]
     reason: Rails::Engine's own class state, set by Rails at boot on the main Ractor
-  - name: DocsKit::Engine.@initializers
-    reason: Rails::Engine's own class state, set by Rails at boot on the main Ractor
-  - name: DocsKit::Engine.@instance
-    reason: Rails::Engine's own class state, set by Rails at boot on the main Ractor
-  - name: DocsKit::LlmsController.@_parameter_encodings
+  - ancestor: ActionController::Base
+    ivars: ["@_parameter_encodings", "@controller_path", "@renderer"]
     reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::LlmsController.@controller_path
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::LlmsController.@renderer
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::McpController.@_parameter_encodings
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::McpController.@controller_path
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::McpController.@renderer
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::SearchController.@_parameter_encodings
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::SearchController.@controller_path
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::SearchController.@renderer
-    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@_source_root
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@base_name
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@class_options
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@commands
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@generator_name
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::InstallGenerator.@no_commands_context
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@_source_root
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@arguments
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@base_name
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@class_options
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@commands
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@generator_name
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
-  - name: DocsKit::Generators::PageGenerator.@no_commands_context
-    reason: Thor's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
+  - ancestor: Rails::Generators::Base
+    ivars: ["@_source_root", "@arguments", "@base_name", "@class_options", "@commands", "@generator_name", "@no_commands_context"]
+    reason: Thor's and Rails::Generators::Base's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor
