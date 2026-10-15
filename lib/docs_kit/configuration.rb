@@ -277,7 +277,7 @@ module DocsKit
 
     # The sentinel "no explicit nav" lambda. #nav_groups compares against this
     # identity to decide whether to derive the sidebar from #nav_registries.
-    DEFAULT_NAV = -> { {} }
+    DEFAULT_NAV = DocsKit::Shareable.make(-> { {} })
 
     # The search-palette shortcuts before this was configurable — "/" and the
     # platform command chord — so a site that never sets #search_shortcuts keeps

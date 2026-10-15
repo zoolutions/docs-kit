@@ -62,34 +62,40 @@ module DocsKit
     # given. Appends to the registry in declaration order (== sidebar order).
     #
     #   page "Getting started", group: "Guide", icon: "rocket", slug: "start", view: "Start"
+    #
+    # The DSL runs in the registry's class body, at load. Each value is made
+    # Ractor-shareable on write (the page list is replaced, never appended to
+    # in place), so a non-main Ractor can read a registry and no thread can
+    # mutate it afterwards.
     def page(title, group:, slug: nil, view: nil, icon: nil)
       raise Error, "cannot mix `page` and `entries` in one registry" if defined?(@entries) && @entries
 
-      (@pages ||= []) << {
+      entry = {
         title: title,
         group: group,
         slug: slug || title.parameterize,
         view: view || title.parameterize(separator: "_").camelize,
         icon: icon
-      }.freeze
+      }
+      @pages = DocsKit::Shareable.make([*(defined?(@pages) && @pages), entry])
     end
 
     # href = "#{path_prefix}/#{slug}". Defaults to "/docs".
     def path_prefix(value = nil)
-      @path_prefix = value if value
+      @path_prefix = DocsKit::Shareable.make(value) if value
       @path_prefix || "/docs"
     end
 
     # The namespace a page's view_class resolves under (v2 pages only), e.g.
     # "Views::Docs::Pages". Required to resolve views via the default Entry.
     def view_namespace(value = nil)
-      @view_namespace = value if value
+      @view_namespace = DocsKit::Shareable.make(value) if value
       @view_namespace
     end
 
     # The attribute used by #grouped (default :group).
     def group_by_attribute(attr = nil)
-      @group_by_attribute = attr if attr
+      @group_by_attribute = DocsKit::Shareable.make(attr) if attr
       @group_by_attribute || :group
     end
 
