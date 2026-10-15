@@ -35,15 +35,19 @@ module DocsUI
     # friction-free path that never trips the parens-with-blocks gotcha.
     include DocsUI::PageHelpers
 
+    # The page macros run in a page class's body, at load (boot, on the main
+    # Ractor), and make each value shareable on write: request threads only
+    # read them afterwards, and a non-main Ractor can too.
+    # rubocop:disable-next ThreadSafety/ClassInstanceVariable -- written once in the class body at load; values made shareable
     class << self
       def title(value = nil)
-        @title = value if value
+        @title = DocsKit::Shareable.make(value) if value
         @title
       end
 
       # Inherited: a subclass that sets no eyebrow shows its parent page's.
       def eyebrow(value = nil)
-        @eyebrow = value if value
+        @eyebrow = DocsKit::Shareable.make(value) if value
         @eyebrow || (superclass.eyebrow if parent_page?)
       end
 
@@ -53,7 +57,7 @@ module DocsUI
       # description, no lead) falls back to config.seo.description in MetaTags.
       # Inherited from a parent page when unset.
       def description(value = nil)
-        @description = value if value
+        @description = DocsKit::Shareable.make(value) if value
         @description || (superclass.description if parent_page?)
       end
 
@@ -62,7 +66,7 @@ module DocsUI
       # or :panel/:toggle/:sidebar to override per page. Inherited from a parent
       # page when unset.
       def on_page(value = :__unset__)
-        @on_page = value unless value == :__unset__
+        @on_page = DocsKit::Shareable.make(value) unless value == :__unset__
         return @on_page if defined?(@on_page)
 
         parent_page? ? superclass.on_page : DocsKit.configuration.on_page_default

@@ -15,7 +15,7 @@ module DocsKit
     config.eager_load_paths = []
     config.paths["app"].skip_eager_load!
 
-    JAVASCRIPT_PATH = root.join("app/javascript")
+    JAVASCRIPT_PATH = root.join("app/javascript").freeze
 
     initializer "docs_kit.controller_helper" do
       ActiveSupport.on_load(:action_controller_base) do
@@ -29,6 +29,19 @@ module DocsKit
     # already declared :md) is a no-op rather than a duplicate-type error.
     initializer "docs_kit.mime_types" do
       Mime::Type.register("text/markdown", :md) unless Mime::Type.lookup_by_extension(:md)
+    end
+
+    # Resolve the configuration's per-render lookups once (DocsKit.finalize!)
+    # after the host has configured the kit: its to_prepare DocsKit.configure
+    # runs before after_initialize at boot. With code reloading on, every
+    # reload re-runs that configure (which re-opens the configuration) against
+    # the reloaded classes, so finalize again after it: a to_prepare added
+    # here, after boot, runs after every to_prepare the host registered.
+    initializer "docs_kit.finalize" do |app|
+      app.config.after_initialize do
+        DocsKit.finalize!
+        app.reloader.to_prepare { DocsKit.finalize! } if app.config.reloading_enabled?
+      end
     end
 
     # Serve the bundled Stimulus controller (docs_nav) as an asset.

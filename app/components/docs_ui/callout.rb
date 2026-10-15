@@ -7,9 +7,9 @@ module DocsUI
   #   render DocsUI::Callout.new(:warning) { "Restart the server after…" }
   class Callout < Phlex::HTML
     LEVELS = {
-      note: { klass: "alert-info", icon: "info" },
-      tip: { klass: "alert-success", icon: "lightbulb" },
-      warning: { klass: "alert-warning", icon: "triangle-alert" }
+      note: { klass: "alert-info", icon: "info" }.freeze,
+      tip: { klass: "alert-success", icon: "lightbulb" }.freeze,
+      warning: { klass: "alert-warning", icon: "triangle-alert" }.freeze
     }.freeze
 
     def initialize(level = :note, title: nil)

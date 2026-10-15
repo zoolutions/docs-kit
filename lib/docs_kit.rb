@@ -5,6 +5,7 @@ require "rouge"
 require "zeitwerk"
 
 require_relative "docs_kit/version"
+require_relative "docs_kit/shareable"
 require_relative "docs_kit/configuration"
 
 # DocsKit — a reusable docs-site component library: the shared Phlex chrome
@@ -17,19 +18,36 @@ require_relative "docs_kit/configuration"
 module DocsKit
   class Error < StandardError; end
 
-  class << self
-    # The current configuration, memoized. Reset with DocsKit.reset_configuration!.
-    def configuration
-      @configuration ||= Configuration.new
-    end
+  # Built at load, never lazily: no first-request race to build two.
+  @configuration = Configuration.new
 
+  class << self
+    # The current configuration. Reset with DocsKit.reset_configuration!.
+    # Assigned at load and by reset_configuration! (boot, specs) on the main
+    # Ractor; request threads only read it. Main-only (.conformance.yml): it
+    # holds the host's per-request callables (brand, nav, version_badge, ...).
+    attr_reader :configuration
+
+    # Re-opens a finalized configuration first (a development reload re-runs
+    # the host's to_prepare configure), so every setting takes effect.
     def configure
+      configuration.reopen!
       yield(configuration)
       configuration.validate!
     end
 
+    # Resolves the configuration's per-render lookups once (see
+    # Configuration#finalize!). In a Rails app the engine calls it after the
+    # host has configured the kit, and again after every code reload; outside
+    # Rails, call it once the configuration is complete.
+    def finalize!
+      configuration.finalize!
+    end
+
+    # A fresh default configuration (specs; a host that re-boots its config).
+    # Runs at boot or between examples, never on a request.
     def reset_configuration!
-      @configuration = Configuration.new
+      @configuration = Configuration.new # rubocop:disable ThreadSafety/ClassInstanceVariable
     end
   end
 end
@@ -54,6 +72,8 @@ loader.push_dir(File.expand_path("docs_kit", __dir__), namespace: DocsKit)
 loader.push_dir(File.expand_path("../app/components/docs_ui", __dir__), namespace: DocsUI)
 loader.ignore(File.expand_path("docs_kit/version.rb", __dir__))
 loader.ignore(File.expand_path("docs_kit/configuration.rb", __dir__))
+# Required eagerly above (configuration.rb's constants use it at load).
+loader.ignore(File.expand_path("docs_kit/shareable.rb", __dir__))
 # Required eagerly by configuration.rb (a plain-Ruby value object, no Rails), so
 # ignore it here too or zeitwerk double-manages the constant.
 loader.ignore(File.expand_path("docs_kit/seo_config.rb", __dir__))

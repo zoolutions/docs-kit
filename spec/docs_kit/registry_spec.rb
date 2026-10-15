@@ -116,6 +116,15 @@ RSpec.describe DocsKit::Registry do
       expect(getting_started.group).to eq("Guide")
     end
 
+    it "makes every DSL value Ractor-shareable on write, so a non-main Ractor can read the registry" do
+      title = +"Theming"
+      v2.page(title, group: +"Guide")
+
+      expect(title).to be_frozen
+      expect([v2.path_prefix, v2.view_namespace, v2.group_by_attribute]).to all(satisfy { Ractor.shareable?(_1) })
+      expect(v2.all.map(&:slug)).to eq(%w[installation getting-started auth theming])
+    end
+
     it "lets slug and view overrides win over the derived values" do
       oauth = v2.from_slug("auth")
       expect(oauth.slug).to eq("auth")

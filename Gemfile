@@ -21,12 +21,14 @@ group :mcp do
 end
 
 group :development, :test do
-  gem "conformance-kit", "~> 0.1", require: false # concurrency conformance gates (zoolutions/phlex-reactive#363)
+  gem "async", require: false # runs conformance-kit's "fiber-safe under an Async reactor" example
+  gem "conformance-kit", "~> 0.4", require: false # concurrency conformance gates (zoolutions/phlex-reactive#363)
   gem "rake"
   gem "rspec"
   gem "rubocop", require: false
   gem "rubocop-performance", require: false
   gem "rubocop-rake", require: false
   gem "rubocop-rspec", require: false
+  gem "rubocop-thread_safety", ">= 0.8", require: false # conformance-kit's config/rubocop.yml (Tier 1 cops)
   gem "simplecov", require: false
 end

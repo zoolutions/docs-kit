@@ -1,3 +1,9 @@
+# conformance-kit's Tier 1 gate: the rubocop-thread_safety cops (no shared
+# mutable state on the request path). Fix, never baseline: an inline disable
+# needs a comment saying why it is safe.
+inherit_gem:
+  conformance-kit: config/rubocop.yml
+
 plugins:
   - rubocop-performance
   - rubocop-rake
@@ -149,6 +155,12 @@ RSpec/MultipleExpectations:
 
 RSpec/NestedGroups:
   Max: 4
+
+# This spec starts 32 threads on purpose: it forces the cold-load race the
+# snapshot cache's lock exists for (a Queue releases them together).
+ThreadSafety/NewThread:
+  Exclude:
+    - "spec/docs_kit/snapshot_contention_spec.rb"
 
 # Generator specs live under spec/generators/ (the conventional Rails location),
 # not a path mirroring the DocsKit::Generators:: namespace.

@@ -1,0 +1,35 @@
+# docs-kit's conformance settings (conformance-kit; zoolutions/phlex-reactive#363).
+# `bundle exec conformance-kit check` runs what the conformance workflow runs:
+# doctor, then ractor.test_command, then `conformance-audit --strict`.
+audit:
+  # Boots a minimal Rails app, then loads every DocsKit and DocsUI constant:
+  # the gem's zeitwerk tree, the engine's controllers and the generators.
+  require: [./spec/conformance_eager_load.rb]
+  namespace: [DocsKit, DocsUI]
+  strict_autoloads: true
+ractor:
+  test_command: bundle exec rspec --tag ractor
+  env:
+    # A --tag ractor run covers a sliver of lib/: lift the suite's 80% floor.
+    SIMPLECOV_MINIMUM: "0"
+probes:
+  gem_name: docs-kit
+main_only:
+  - name: DocsKit.@configuration
+    reason: the host's boot-time configuration, assigned at load and by DocsKit.configure / reset_configuration! on the main Ractor; it holds host-supplied per-request callables (brand, nav, version_badge, importmap) that can never be Ractor-shareable. A non-main Ractor builds and passes its own DocsKit::Configuration (LlmsText, Snapshot.for and the Ractor canary take one as an argument)
+  - name: DocsKit::Store.@fallback_lock
+    reason: the below-3.4 fallback's lock (a copy of ConformanceKit::Store), created at load and only read on the main Ractor; non-main Ractors use Ractor-local storage and 3.4+ uses Ractor.store_if_absent
+  - name: DocsKit::Store.@fallback_values
+    reason: the below-3.4 fallback's storage, only touched on the main Ractor under @fallback_lock; never read on 3.4+
+  # Framework class state on the gem's own subclasses, narrowed to the
+  # framework's ivars so anything docs-kit itself kept there would still be
+  # audited.
+  - ancestor: Rails::Engine
+    ivars: ["@called_from", "@initializers", "@instance"]
+    reason: Rails::Engine's own class state, set by Rails at boot on the main Ractor
+  - ancestor: ActionController::Base
+    ivars: ["@_parameter_encodings", "@controller_path", "@renderer"]
+    reason: ActionController::Base's own class state (its inherited hooks and controller_path memo), set by Rails when the controller loads and serves requests, on the main Ractor
+  - ancestor: Rails::Generators::Base
+    ivars: ["@_source_root", "@arguments", "@base_name", "@class_options", "@commands", "@generator_name", "@no_commands_context"]
+    reason: Thor's and Rails::Generators::Base's own generator class state, set when the generator class loads; generators run under `rails generate`, a CLI on the main Ractor

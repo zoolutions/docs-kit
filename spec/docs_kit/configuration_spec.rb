@@ -804,9 +804,35 @@ RSpec.describe DocsKit::Configuration do
       expect(config.openapi_document).not_to be(first)
     end
 
+    # No process-wide map keyed by configuration: a replaced configuration
+    # (reset_configuration!, a host spec) takes its parsed Document with it.
+    it "keeps the memo on the configuration itself, not in a shared cache" do
+      config = described_class.new
+      config.openapi = yaml_path
+      document = config.openapi_document
+
+      expect(config.instance_variable_get(:@openapi_memo)).to include(document: document)
+    end
+
     it "raises a DocsKit::Error naming c.openapi when read while unset" do
       expect { described_class.new.openapi_document }
         .to raise_error(DocsKit::Error, /c\.openapi/)
+    end
+
+    # The load yields the thread (Thread.pass), so threads that miss the memo
+    # together all reach it unless the check-then-set is locked.
+    context "when threads miss the memo together" do
+      let(:subject_call) { -> { DocsKit.configuration.openapi_document } }
+
+      before do
+        DocsKit.configure { |c| c.openapi = yaml_path }
+        allow(DocsKit::OpenApi).to receive(:load).and_wrap_original do |original, *args|
+          Thread.pass
+          original.call(*args)
+        end
+      end
+
+      it_behaves_like "thread-safe under contention", threads: 16, iterations: 5, consistent: :identical
     end
   end
 

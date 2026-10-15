@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../../../docs_kit/shareable"
 require_relative "migration"
 require_relative "migrations/v1_2_0"
 require_relative "../../../docs_kit/version"
@@ -24,21 +25,25 @@ module DocsKit
     # its transform in migrations/vX_Y_Z.rb.
     class MigrationRegistry
       def initialize(migrations = [])
-        @migrations = migrations.sort_by(&:to)
+        @migrations = migrations.sort_by(&:to).freeze
       end
 
-      # The registry the install generator runs during `--sync`.
-      def self.default
-        @default ||= new(MIGRATIONS)
-      end
+      # The registry the install generator runs during `--sync` (DEFAULT, below).
+      def self.default = DEFAULT
 
       # Ordered `Migration.new(to: "1.x.0", description: "...") { ... }` entries, one
       # per release that changes config knobs, routes, templates, or toolchain.
-      MIGRATIONS = [
-        Migration.new(to: "1.2.0", description: Migrations::V1_2_0::DESCRIPTION) do |root, _generator|
-          Migrations::V1_2_0.call(root)
-        end
-      ].freeze
+      # Shareable: each block is capture-free (its self is this class).
+      MIGRATIONS = DocsKit::Shareable.make(
+        [
+          Migration.new(to: "1.2.0", description: Migrations::V1_2_0::DESCRIPTION) do |root, _generator|
+            Migrations::V1_2_0.call(root)
+          end
+        ]
+      )
+
+      # Built at load from MIGRATIONS, never lazily (no first-call race).
+      DEFAULT = DocsKit::Shareable.make(new(MIGRATIONS))
 
       # The migrations a site last synced at `from_version` still needs, ascending
       # by version — those in `(from_version, upto]`. `upto` defaults to the

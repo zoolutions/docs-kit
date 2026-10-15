@@ -24,7 +24,9 @@ module DocsUI
   class Code < Phlex::HTML
     include Phlex::Rails::Helpers::ContentSecurityPolicyNonce
 
-    FORMATTER = Rouge::Formatters::HTML.new
+    # Ractor-shareable (deep-frozen): Rouge's HTML formatter keeps no per-call
+    # state, so one instance serves every render (and every Ractor).
+    FORMATTER = DocsKit::Shareable.make(Rouge::Formatters::HTML.new)
 
     def initialize(source, lexer: nil, filename: nil)
       @source = source.to_s.strip
