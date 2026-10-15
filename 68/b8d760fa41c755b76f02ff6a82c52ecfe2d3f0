@@ -1,0 +1,21 @@
+lib/docs_kit/engine.rb
+  s_4786a62cd35147::t_b8969e2d8a8124 36-39,42-43
+spec/docs_kit/boot_spec.rb
+  s_4786a62cd35147::t_97f643c25b557a 1-66,68-71,73-80,82-97,100-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "68b8d760fa41c755b76f02ff6a82c52ecfe2d3f0",
+  "prompts": {},
+  "sessions": {
+    "s_4786a62cd35147": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d1e58604-bb1b-456c-ace0-8fe7f151dae8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "mhenrixon <mikael@mhenrixon.com>"
+    }
+  }
+}
