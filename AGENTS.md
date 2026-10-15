@@ -88,6 +88,7 @@ Read it before writing a page.
 ```bash
 bundle exec rspec        # Suite (component render + registry + config + generator); SimpleCov enforces an 80% minimum
 bundle exec rubocop      # Lint (rubocop -A to autocorrect)
+bundle exec conformance-kit check   # conformance-kit's gate (run on Ruby 4.0): doctor, the Ractor canary, the strict audit
 bundle exec rake         # spec + rubocop, together — mixes both tools' raw output, so prefer running the two commands above separately when you need to read the result
 bun run build:css        # Rebuild the Tailwind/daisyUI CSS (in the docs/ app, or a consuming site)
 ```
@@ -127,7 +128,7 @@ open, the "on this page" TOC) — there is no server round-trip. See
 - Component specs (`spec/docs_ui/`) render a `DocsUI::` component and assert on the produced markup's semantics (an active link, a present theme option, a config-driven value).
 - Generator specs (`spec/generators/install_generator_spec.rb`) run `docs_kit:install` against a throwaway destination root (a tmp app skeleton, plain Thor — no Rails boot) and assert the file manifest + key contents.
 - Coverage: SimpleCov enforces `minimum_coverage 80` from within the suite (`bundle exec rspec` / `rake` fails below it); 100% aspired for `DocsKit::Configuration` and `DocsKit::Registry` (the public API sites depend on).
-- CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.3/3.4 for every push to `main` and every PR.
+- CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.3/3.4/4.0 for every push to `main` and every PR; `.github/workflows/conformance.yml` runs `bundle exec conformance-kit check` (doctor, the `--tag ractor` canary, `conformance-audit --strict`, settings in `.conformance.yml`) on Ruby 4.0.
 - See `.claude/rules/testing.md`.
 
 ## Labels
