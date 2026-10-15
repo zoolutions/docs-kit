@@ -479,8 +479,11 @@ module DocsKit
     # the Rouge theme classes and every registered page's view class (frozen,
     # so a non-main Ractor can read them), and fills the lazy memos (brand logo,
     # SEO, landing, the optional-mcp probe) so no request races to fill them.
-    # Called by DocsKit.finalize! (the engine's after_initialize); DocsKit.configure
-    # re-opens it (#reopen!). A theme assigned directly afterwards still wins:
+    # Called by DocsKit.finalize! (the engine's after_initialize, and after every
+    # code reload); DocsKit.configure re-opens it (#reopen!). The host's
+    # callables (brand, nav, version_badge, importmap, ...) are kept as they are:
+    # they can close over app state, so the configuration itself stays
+    # main-Ractor-only. A theme assigned directly afterwards still wins:
     # the resolved class is only used while its source setting is unchanged.
     def finalize!
       brand_logo

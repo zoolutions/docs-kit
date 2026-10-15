@@ -37,8 +37,9 @@ module DocsKit
     end
 
     # Resolves the configuration's per-render lookups once (see
-    # Configuration#finalize!). The engine calls it after the host has
-    # configured the kit, unless code reloading is on.
+    # Configuration#finalize!). In a Rails app the engine calls it after the
+    # host has configured the kit, and again after every code reload; outside
+    # Rails, call it once the configuration is complete.
     def finalize!
       configuration.finalize!
     end
