@@ -369,8 +369,10 @@ The engine calls `DocsKit.finalize!` once the app has booted (`after_initialize`
 after your `to_prepare` configure) in every environment, and in development again
 after every code reload. It resolves the code themes and every registered page's
 view class once, into frozen maps, and builds the brand logo, SEO, landing and
-optional-mcp memos up front, so no request looks a constant up or races another
-to fill a memo. That is also why a broken `brand_logo` fails at boot.
+optional-mcp memos up front, so no request races another to fill a memo, or
+looks up a theme or a resolved page view. A page whose view class didn't exist
+at boot is still looked up when it is read, so it turns up once written. That
+is also why a broken `brand_logo` fails at boot.
 
 - `DocsKit.configure` re-opens a finalized configuration, so re-running it (a
   development reload, a spec) takes effect.
