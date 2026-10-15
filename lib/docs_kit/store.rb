@@ -9,8 +9,10 @@ module DocsKit
   # 3.4 (and on engines without Ractor) the main Ractor uses one Hash guarded by
   # a Mutex, created at load (never lazily, so there is no check-then-set race);
   # it is allowlisted main-only in .conformance.yml. A non-main Ractor on 3.3
-  # cannot read it, so it keeps its own values in Ractor-local storage instead
-  # (not locked: one Ractor's threads may race to build a value, as with any `||=`).
+  # cannot read it, so it keeps its own values in Ractor-local storage instead.
+  # That path has no lock (none is shareable): threads of one Ractor that miss
+  # together may each build a value, but only the first one stored is kept and
+  # returned to all of them.
   module Store
     # rubocop:disable ThreadSafety/MutableClassInstanceVariable -- main-only fallback, guarded by @fallback_lock
     @fallback_lock = Mutex.new
@@ -33,8 +35,16 @@ module DocsKit
       def main_ractor? = !defined?(::Ractor) || ::Ractor.current == ::Ractor.main
 
       # Boxed, so a nil or false value is cached rather than rebuilt on every fetch.
+      # The value is built before the check-then-store, which runs no Ruby code
+      # between the read and the write, so a thread that built a value after
+      # another stored one gets the stored one.
       def ractor_local(key)
-        (::Ractor.current[:"docs_kit_store/#{key}"] ||= [yield]).first
+        slot = :"docs_kit_store/#{key}"
+        stored = ::Ractor.current[slot]
+        return stored.first if stored
+
+        built = [yield]
+        (::Ractor.current[slot] ||= built).first
       end
 
       public

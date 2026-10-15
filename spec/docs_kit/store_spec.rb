@@ -46,6 +46,37 @@ RSpec.describe DocsKit::Store do
     end
   end
 
+  # A non-main Ractor below 3.4 keeps its values in Ractor-local storage.
+  # Reached here on the main Ractor by stubbing both capability checks; the
+  # initializer yields the thread, so threads that miss together all build.
+  context "without Ractor.store_if_absent, off the main Ractor (Ractor-local storage)" do
+    before do
+      allow(described_class).to receive_messages(native?: false, main_ractor?: false)
+    end
+
+    it "caches a nil value instead of rebuilding it" do
+      name = key
+      builds = 0
+      2.times { described_class.fetch(name) { builds += 1 and nil } }
+
+      expect(builds).to eq(1)
+    end
+
+    describe "under contention" do
+      let(:name) { key }
+      let(:subject_call) do
+        lambda do
+          described_class.fetch(name) do
+            Thread.pass
+            Object.new
+          end
+        end
+      end
+
+      it_behaves_like "thread-safe under contention", threads: 16, iterations: 20, consistent: :identical
+    end
+  end
+
   it "reports the capability it runs on" do
     expected = defined?(Ractor) ? Ractor.respond_to?(:store_if_absent) : false
 
