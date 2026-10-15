@@ -348,6 +348,7 @@ module DocsKit
       @versions = []
       @repo_url = nil
       @snapshots_path = nil
+      @openapi_memo = nil
       @finalized = nil
     end
 
@@ -456,21 +457,22 @@ module DocsKit
     # DocsKit::Error naming the knob when read while #openapi is unset — a missing
     # spec has nothing useful to degrade to.
     #
-    # The memo lives in a per-Ractor cache (DocsKit::Store), one entry per
-    # configuration, and its mtime check-then-set runs under that cache's lock:
-    # threads that miss together load the spec once and read the same Document.
+    # The memo lives on this configuration, so a replaced one takes its
+    # Document with it, and its mtime check-then-set runs under a per-Ractor
+    # lock (DocsKit::Store): threads that miss together load the spec once and
+    # read the same Document. A configuration is only ever read in the Ractor
+    # that built it, so that Ractor's lock is the one that matters.
     def openapi_document
       raise DocsKit::Error, "no OpenAPI spec configured — set c.openapi to a path or Hash" if @openapi.nil?
 
       source = @openapi
       mtime = openapi_source_mtime
-      cache = DocsKit::Store.fetch(:docs_kit_openapi_documents) { { lock: Mutex.new, entries: {}.compare_by_identity } }
-      cache.fetch(:lock).synchronize do
-        cached = cache.fetch(:entries)[self]
-        next cached.fetch(:document) if cached && cached.fetch(:source).equal?(source) && cached.fetch(:mtime) == mtime
+      DocsKit::Store.fetch(:docs_kit_openapi_lock) { Mutex.new }.synchronize do
+        memo = @openapi_memo
+        next memo.fetch(:document) if memo && memo.fetch(:source).equal?(source) && memo.fetch(:mtime) == mtime
 
         DocsKit::OpenApi.load(source).tap do |document|
-          cache.fetch(:entries)[self] = { source: source, mtime: mtime, document: document }
+          @openapi_memo = { source: source, mtime: mtime, document: document }
         end
       end
     end

@@ -804,6 +804,16 @@ RSpec.describe DocsKit::Configuration do
       expect(config.openapi_document).not_to be(first)
     end
 
+    # No process-wide map keyed by configuration: a replaced configuration
+    # (reset_configuration!, a host spec) takes its parsed Document with it.
+    it "keeps the memo on the configuration itself, not in a shared cache" do
+      config = described_class.new
+      config.openapi = yaml_path
+      document = config.openapi_document
+
+      expect(config.instance_variable_get(:@openapi_memo)).to include(document: document)
+    end
+
     it "raises a DocsKit::Error naming c.openapi when read while unset" do
       expect { described_class.new.openapi_document }
         .to raise_error(DocsKit::Error, /c\.openapi/)
