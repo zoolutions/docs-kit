@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **A cold archived version is built once, however many requests ask.**
+  `DocsKit::Snapshot.for` cached snapshots in an unguarded class ivar, so
+  threads that missed a version together each read and parsed its
+  `manifest.json` and raced to store it. The cache is now per Ractor and its
+  check-then-set runs under a lock; `Configuration#openapi_document`'s
+  mtime-checked memo likewise. (#91)
+- **No per-render constant lookups once the app has booted.** The engine now
+  calls `DocsKit.finalize!` after the host has configured the kit (skipped
+  while code reloading is on): the Rouge code themes and every registered
+  page's view class are resolved once into frozen maps instead of
+  `Object.const_get` / `safe_constantize` on every render, and the brand logo,
+  SEO, landing and optional-mcp memos are filled at boot rather than by
+  whichever request comes first. `DocsKit.configure` re-opens it, and a theme
+  assigned directly afterwards still wins. (#91)
+
+### Changed
+
+- **Boot-time values are frozen.** The registry DSL (`page`, `path_prefix`,
+  `view_namespace`, `group_by_attribute`) and `DocsUI::Page`'s `title`,
+  `eyebrow`, `description` and `on_page` macros deep-freeze what they are
+  given (Ractor-shareable), as do the gem's own constants, and
+  `DocsKit.configuration` is built at load rather than on first read. Code
+  that mutated one of those values in place after declaring it now raises
+  `FrozenError`. (#91)
+- **A broken `brand_logo` fails at boot.** `DocsKit.finalize!` builds the logo,
+  so a missing file or non-SVG markup raises when the app boots instead of on
+  the first render. (#91)
+- docs-kit is held to [conformance-kit](https://github.com/zoolutions/conformance-kit)
+  in CI: the rubocop-thread_safety cops, thread and fiber contention specs, a
+  Ruby 4.0 Ractor canary (search index, llms.txt, the sidebar tree) and
+  `conformance-audit --strict`. (#91)
+
 ## [1.3.0] — 2026-10-13
 
 ### Fixed
