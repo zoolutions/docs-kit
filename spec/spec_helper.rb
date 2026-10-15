@@ -3,7 +3,10 @@
 # Coverage. Start SimpleCov BEFORE requiring docs_kit so every lib/ file loaded
 # below is tracked. AGENTS.md sets the 80% floor; enforce it here so `rake` fails
 # locally and in CI when coverage regresses. The generators/ tree is the install
-# generator, exercised by spec/generators/**.
+# generator, exercised by spec/generators/**. SIMPLECOV_MINIMUM overrides the
+# floor for a partial run: conformance-kit's `rspec --tag ractor` stage sets it
+# to 0 (.conformance.yml ractor.env), since a handful of examples covers a
+# sliver of lib/.
 require "simplecov"
 SimpleCov.start do
   enable_coverage :branch
@@ -12,7 +15,7 @@ SimpleCov.start do
   group "Registry", "lib/docs_kit/registry.rb"
   group "Components", "app/components"
   group "Generators", "lib/generators"
-  minimum_coverage 80
+  minimum_coverage Integer(ENV.fetch("SIMPLECOV_MINIMUM", "80"))
 end
 
 # Component specs render DocsUI:: Phlex components in isolation (no Rails
