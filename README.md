@@ -363,6 +363,31 @@ c.nav = lambda do
 end
 ```
 
+### After boot: finalized, threads and Ractors
+
+The engine calls `DocsKit.finalize!` once the app has booted (`after_initialize`,
+after your `to_prepare` configure) in every environment, and in development again
+after every code reload. It resolves the code themes and every registered page's
+view class once, into frozen maps, and builds the brand logo, SEO, landing and
+optional-mcp memos up front, so no request looks a constant up or races another
+to fill a memo. That is also why a broken `brand_logo` fails at boot.
+
+- `DocsKit.configure` re-opens a finalized configuration, so re-running it (a
+  development reload, a spec) takes effect.
+- Outside Rails (a script or Rack app that renders the chrome), call
+  `DocsKit.finalize!` yourself once the configuration is complete.
+- Your callables (`brand`, `title_suffix`, `nav`, `version_badge`, `importmap`)
+  are kept exactly as given: they may close over app state (`Current`, a
+  tenant), so they are never frozen or copied, and finalizing never fails on
+  one. That makes `DocsKit.configuration` main-Ractor-only. Code that runs in a
+  non-main Ractor builds its own `DocsKit::Configuration` from plain values and
+  passes it in (`DocsKit::LlmsText.index(config, ...)`,
+  `DocsKit::Snapshot.for(version, config:)`).
+- What the registry DSL (`page`, `path_prefix`, `view_namespace`) and
+  `DocsUI::Page`'s macros (`title`, `eyebrow`, `description`, `on_page`) are
+  given is deep-frozen when declared, as are docs-kit's own constants: mutating
+  one in place raises `FrozenError`.
+
 ## Render
 
 ```ruby
