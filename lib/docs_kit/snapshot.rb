@@ -28,26 +28,40 @@ module DocsKit
       # invalidated when manifest.json's mtime changes — the same
       # reload-on-change posture as Configuration#openapi_document, so editing
       # a snapshot in development is picked up without a server restart.
+      #
+      # The cache is per Ractor (DocsKit::Store) and its check-then-set runs
+      # under that Ractor's lock, so threads that miss a cold key together
+      # build it once and all get the same instance.
       def for(version, config: DocsKit.configuration)
         version = DocVersion.from(version)
         root = root_for(version, config)
         mtime = manifest_mtime(root)
-        key = [version.id.to_s, root.to_s]
-
-        @cache ||= {}
-        cached = @cache[key]
-        return cached.fetch(:snapshot) if cached && cached.fetch(:mtime) == mtime
-
-        new(version: version, root: root).tap do |snapshot|
-          @cache[key] = { snapshot: snapshot, mtime: mtime }
-        end
+        memoize([version.id.to_s, root.to_s], mtime) { new(version: version, root: root) }
       end
 
       def reset_cache!
-        @cache = {}
+        cache = cache_store
+        cache.fetch(:lock).synchronize { cache.fetch(:entries).clear }
       end
 
       private
+
+      def cache_store
+        DocsKit::Store.fetch(:docs_kit_snapshots) { { lock: Mutex.new, entries: {} } }
+      end
+
+      # The cached snapshot for key while its manifest mtime is unchanged, else
+      # the block's fresh one (stored) — the whole check-then-set under the lock.
+      def memoize(key, mtime)
+        cache = cache_store
+        cache.fetch(:lock).synchronize do
+          entries = cache.fetch(:entries)
+          cached = entries[key]
+          next cached.fetch(:snapshot) if cached && cached.fetch(:mtime) == mtime
+
+          yield.tap { |snapshot| entries[key] = { snapshot: snapshot, mtime: mtime } }
+        end
+      end
 
       # <snapshots_path>/<id>, or nil when no snapshots path resolves (no
       # config, no Rails) — which reads back as an empty snapshot.
@@ -70,10 +84,13 @@ module DocsKit
 
     attr_reader :version, :root
 
+    # Built whole here, never lazily: a cached Snapshot is shared by every
+    # server thread, so it carries no memo a reader could race to fill.
     def initialize(version:, root:)
       @version = version
       @root = root
       @manifest = read_manifest
+      @registries = build_registries
     end
 
     # Every snapshot page across the manifest's registries, in manifest order —
@@ -116,8 +133,10 @@ module DocsKit
     private
 
     # The manifest's registries as { heading:, entries: [Snapshot::Entry] }.
-    def registries
-      @registries ||= Array(@manifest && @manifest["registries"]).map do |registry|
+    attr_reader :registries
+
+    def build_registries
+      Array(@manifest && @manifest["registries"]).map do |registry|
         prefix = registry["path_prefix"] || "/docs"
         {
           heading: registry["heading"],
