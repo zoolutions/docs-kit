@@ -808,6 +808,22 @@ RSpec.describe DocsKit::Configuration do
       expect { described_class.new.openapi_document }
         .to raise_error(DocsKit::Error, /c\.openapi/)
     end
+
+    # The load yields the thread (Thread.pass), so threads that miss the memo
+    # together all reach it unless the check-then-set is locked.
+    context "when threads miss the memo together" do
+      let(:subject_call) { -> { DocsKit.configuration.openapi_document } }
+
+      before do
+        DocsKit.configure { |c| c.openapi = yaml_path }
+        allow(DocsKit::OpenApi).to receive(:load).and_wrap_original do |original, *args|
+          Thread.pass
+          original.call(*args)
+        end
+      end
+
+      it_behaves_like "thread-safe under contention", threads: 16, iterations: 5, consistent: :identical
+    end
   end
 
   describe "#versions" do

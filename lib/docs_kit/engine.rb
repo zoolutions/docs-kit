@@ -31,6 +31,17 @@ module DocsKit
       Mime::Type.register("text/markdown", :md) unless Mime::Type.lookup_by_extension(:md)
     end
 
+    # Resolve the configuration's per-render lookups once (DocsKit.finalize!)
+    # after the host has configured the kit: its to_prepare DocsKit.configure
+    # runs before after_initialize at boot. Not while code reloading is on: a
+    # reload re-runs that configure against reloaded classes, so development
+    # keeps resolving lazily.
+    initializer "docs_kit.finalize" do |app|
+      app.config.after_initialize do
+        DocsKit.finalize! unless app.config.reloading_enabled?
+      end
+    end
+
     # Serve the bundled Stimulus controller (docs_nav) as an asset.
     initializer "docs_kit.assets" do |app|
       app.config.assets.paths << JAVASCRIPT_PATH.to_s if app.config.respond_to?(:assets)

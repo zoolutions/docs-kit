@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "shareable"
 require_relative "seo_config"
 require_relative "landing_config"
 
@@ -347,6 +348,7 @@ module DocsKit
       @versions = []
       @repo_url = nil
       @snapshots_path = nil
+      @finalized = nil
     end
 
     # The normalized App Home link (a DocsKit::TopbarLink), or nil when unset —
@@ -453,15 +455,55 @@ module DocsKit
     # spec in development is picked up without a server restart. Raises a
     # DocsKit::Error naming the knob when read while #openapi is unset — a missing
     # spec has nothing useful to degrade to.
+    #
+    # The memo lives in a per-Ractor cache (DocsKit::Store), one entry per
+    # configuration, and its mtime check-then-set runs under that cache's lock:
+    # threads that miss together load the spec once and read the same Document.
     def openapi_document
       raise DocsKit::Error, "no OpenAPI spec configured — set c.openapi to a path or Hash" if @openapi.nil?
 
+      source = @openapi
       mtime = openapi_source_mtime
-      return @openapi_document if defined?(@openapi_document) && @openapi_document_mtime == mtime
+      cache = DocsKit::Store.fetch(:docs_kit_openapi_documents) { { lock: Mutex.new, entries: {}.compare_by_identity } }
+      cache.fetch(:lock).synchronize do
+        cached = cache.fetch(:entries)[self]
+        next cached.fetch(:document) if cached && cached.fetch(:source).equal?(source) && cached.fetch(:mtime) == mtime
 
-      @openapi_document_mtime = mtime
-      @openapi_document = DocsKit::OpenApi.load(@openapi)
+        DocsKit::OpenApi.load(source).tap do |document|
+          cache.fetch(:entries)[self] = { source: source, mtime: mtime, document: document }
+        end
+      end
     end
+
+    # Resolves, once at boot, what a render would otherwise look up per call:
+    # the Rouge theme classes and every registered page's view class (frozen,
+    # so a non-main Ractor can read them), and fills the lazy memos (brand logo,
+    # SEO, landing, the optional-mcp probe) so no request races to fill them.
+    # Called by DocsKit.finalize! (the engine's after_initialize); DocsKit.configure
+    # re-opens it (#reopen!). A theme assigned directly afterwards still wins:
+    # the resolved class is only used while its source setting is unchanged.
+    def finalize!
+      brand_logo
+      seo
+      landing
+      mcp_gem_present?
+      each_registry { |registry| registry.finalize! if registry.respond_to?(:finalize!) }
+      @finalized = DocsKit::Shareable.make(
+        code_theme: @code_theme, code_theme_class: resolve_code_theme_class,
+        code_theme_dark: @code_theme_dark, code_theme_dark_class: resolve_code_theme_dark_class
+      )
+      self
+    end
+
+    # Drops what #finalize! resolved (and the registries' resolved view classes),
+    # so the next reads resolve lazily against the current settings.
+    def reopen!
+      @finalized = nil
+      each_registry { |registry| registry.reopen! if registry.respond_to?(:reopen!) }
+      self
+    end
+
+    def finalized? = !@finalized.nil?
 
     # The effective client map for DocsUI::RequestExample: the four shipped
     # defaults with site overrides/extensions merged over them. Hash#merge keeps
@@ -677,9 +719,7 @@ module DocsKit
     # name that doesn't resolve degrades to the default theme rather than raising
     # NameError on every DocsUI::Code render.
     def code_theme_class
-      return @code_theme if @code_theme.is_a?(Class)
-
-      resolve_theme(@code_theme) || Object.const_get(DEFAULT_CODE_THEME)
+      resolved(:code_theme_class, :code_theme, @code_theme) { resolve_code_theme_class }
     end
 
     # The dark Rouge theme class resolved from #code_theme_dark (String or
@@ -687,10 +727,7 @@ module DocsKit
     # dark code CSS only when this is non-nil, so an unresolvable name degrades to
     # nil (no dark restyle) rather than raising.
     def code_theme_dark_class
-      return if @code_theme_dark.nil?
-      return @code_theme_dark if @code_theme_dark.is_a?(Class)
-
-      resolve_theme(@code_theme_dark)
+      resolved(:code_theme_dark_class, :code_theme_dark, @code_theme_dark) { resolve_code_theme_dark_class }
     end
 
     # The dark themes the site actually ships: #dark_themes intersected with
@@ -702,6 +739,33 @@ module DocsKit
     end
 
     private
+
+    def resolve_code_theme_class
+      return @code_theme if @code_theme.is_a?(Class)
+
+      resolve_theme(@code_theme) || Object.const_get(DEFAULT_CODE_THEME)
+    end
+
+    def resolve_code_theme_dark_class
+      return if @code_theme_dark.nil?
+      return @code_theme_dark if @code_theme_dark.is_a?(Class)
+
+      resolve_theme(@code_theme_dark)
+    end
+
+    # What #finalize! resolved for key, while the setting it came from is still
+    # the same object; otherwise the block resolves it now (never finalized,
+    # re-opened, or the setting was reassigned since).
+    def resolved(key, setting, current)
+      finalized = @finalized
+      return yield unless finalized && finalized.fetch(setting).equal?(current)
+
+      finalized.fetch(key)
+    end
+
+    def each_registry(&)
+      (@nav_registries || {}).each_value(&)
+    end
 
     # Resolve a Rouge theme constant from its String name, returning nil (not
     # raising) when the name doesn't resolve — a typo'd or unloaded theme must

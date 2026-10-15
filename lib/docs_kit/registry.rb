@@ -98,10 +98,30 @@ module DocsKit
     # v2 pages are wrapped in the default Entry; hash entries in the site's class.
     def all
       if defined?(@pages) && @pages
-        @pages.map { |attrs| Entry.new(attrs, path_prefix, view_namespace) }
+        views = @view_classes || Entry::NO_VIEWS
+        @pages.map { |attrs| Entry.new(attrs, path_prefix, view_namespace, views) }
       else
         (entries || []).map { |entry| new(entry) }
       end
+    end
+
+    # Resolves every `page`'s view class once (DocsKit.finalize!, at boot) into
+    # a frozen { view name => class } map the entries read instead of
+    # constantizing on every call. Only views that resolve are kept, so a page
+    # written later still turns up. An `entries` registry resolves its own views.
+    def finalize!
+      resolved = Array(defined?(@pages) && @pages).each_with_object({}) do |attrs, map|
+        view_class = Entry.resolve(view_namespace, attrs[:view])
+        map[attrs[:view]] = view_class if view_class
+      end
+      @view_classes = DocsKit::Shareable.make(resolved)
+      self
+    end
+
+    # Drops the resolved view classes: entries constantize again (DocsKit.configure).
+    def reopen!
+      @view_classes = nil
+      self
     end
 
     # The instance whose slug matches, or nil.
@@ -129,15 +149,26 @@ module DocsKit
     # resolved under the registry's view_namespace (nil until the class exists,
     # preserving the no-dead-links behavior).
     class Entry
+      NO_VIEWS = {}.freeze
+
+      # The page class `view_name` names under `view_namespace`, or nil.
+      def self.resolve(view_namespace, view_name)
+        return unless view_namespace
+
+        "#{view_namespace}::#{view_name}".safe_constantize
+      end
+
       attr_reader :slug, :title, :group, :icon, :view_name, :href
 
-      def initialize(attrs, path_prefix, view_namespace)
+      # view_classes: the registry's finalized { view name => class } map.
+      def initialize(attrs, path_prefix, view_namespace, view_classes = NO_VIEWS)
         @slug = attrs[:slug]
         @title = attrs[:title]
         @group = attrs[:group]
         @icon = attrs[:icon]
         @view_name = attrs[:view]
         @view_namespace = view_namespace
+        @view_classes = view_classes
         @href = "#{path_prefix}/#{@slug}"
       end
 
@@ -145,7 +176,7 @@ module DocsKit
       def view_class
         return unless @view_namespace
 
-        "#{@view_namespace}::#{@view_name}".safe_constantize
+        @view_classes.fetch(@view_name) { self.class.resolve(@view_namespace, @view_name) }
       end
 
       # The renderable instance for this page (nil when unauthored) — the seam

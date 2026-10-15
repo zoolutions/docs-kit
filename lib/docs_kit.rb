@@ -5,6 +5,7 @@ require "rouge"
 require "zeitwerk"
 
 require_relative "docs_kit/version"
+require_relative "docs_kit/shareable"
 require_relative "docs_kit/configuration"
 
 # DocsKit — a reusable docs-site component library: the shared Phlex chrome
@@ -23,9 +24,19 @@ module DocsKit
       @configuration ||= Configuration.new
     end
 
+    # Re-opens a finalized configuration first (a development reload re-runs
+    # the host's to_prepare configure), so every setting takes effect.
     def configure
+      configuration.reopen!
       yield(configuration)
       configuration.validate!
+    end
+
+    # Resolves the configuration's per-render lookups once (see
+    # Configuration#finalize!). The engine calls it after the host has
+    # configured the kit, unless code reloading is on.
+    def finalize!
+      configuration.finalize!
     end
 
     def reset_configuration!
@@ -54,6 +65,8 @@ loader.push_dir(File.expand_path("docs_kit", __dir__), namespace: DocsKit)
 loader.push_dir(File.expand_path("../app/components/docs_ui", __dir__), namespace: DocsUI)
 loader.ignore(File.expand_path("docs_kit/version.rb", __dir__))
 loader.ignore(File.expand_path("docs_kit/configuration.rb", __dir__))
+# Required eagerly above (configuration.rb's constants use it at load).
+loader.ignore(File.expand_path("docs_kit/shareable.rb", __dir__))
 # Required eagerly by configuration.rb (a plain-Ruby value object, no Rails), so
 # ignore it here too or zeitwerk double-manages the constant.
 loader.ignore(File.expand_path("docs_kit/seo_config.rb", __dir__))
