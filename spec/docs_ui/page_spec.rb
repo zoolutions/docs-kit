@@ -179,7 +179,8 @@ RSpec.describe "DocsUI::Page.on_page" do # rubocop:disable RSpec/DescribeClass
       klass.eyebrow(+"Guide")
       klass.description(+"Add the gem.")
       klass.on_page(:toggle)
-      print [klass.title, klass.eyebrow, klass.description, klass.on_page].all? { Ractor.shareable?(_1) }
+      values = [klass.title, klass.eyebrow, klass.description, klass.on_page]
+      print values == ["Installation", "Guide", "Add the gem.", :toggle] && values.all? { Ractor.shareable?(_1) }
     RUBY
     stdout, stderr, status = Open3.capture3(RbConfig.ruby, "-e", script)
     raise "child process failed: #{stderr}" unless status.success?

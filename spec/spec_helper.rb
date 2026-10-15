@@ -15,7 +15,8 @@ SimpleCov.start do
   group "Registry", "lib/docs_kit/registry.rb"
   group "Components", "app/components"
   group "Generators", "lib/generators"
-  minimum_coverage Integer(ENV.fetch("SIMPLECOV_MINIMUM", "80"))
+  floor = ENV.fetch("SIMPLECOV_MINIMUM", "")
+  minimum_coverage floor.empty? ? 80 : Integer(floor)
 end
 
 # Component specs render DocsUI:: Phlex components in isolation (no Rails

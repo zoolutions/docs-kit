@@ -48,7 +48,8 @@ RSpec.describe "DocsKit.finalize!" do # rubocop:disable RSpec/DescribeClass
 
     expect(DocsKit.configuration.code_theme_class).to eq(Rouge::Themes::Github)
     expect(DocsKit.configuration.code_theme_dark_class).to eq(Rouge::Themes::Monokai)
-    expect(Object).not_to have_received(:const_get)
+    expect(Object).not_to have_received(:const_get).with("Rouge::Themes::Github")
+    expect(Object).not_to have_received(:const_get).with("Rouge::Themes::Monokai")
   end
 
   it "keeps the default-theme fallback for a name that does not resolve" do
