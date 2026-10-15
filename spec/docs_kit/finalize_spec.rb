@@ -73,6 +73,15 @@ RSpec.describe "DocsKit.finalize!" do # rubocop:disable RSpec/DescribeClass
     expect(registry.from_slug("unwritten").view_class).to be(DocsKitFinalizeSpecPages::Unwritten)
   end
 
+  it "re-resolves the page views when view_namespace changes after finalize" do
+    DocsKit.finalize!
+    stub_const("DocsKitFinalizeSpecOtherPages", Module.new)
+    stub_const("DocsKitFinalizeSpecOtherPages::Installation", Class.new)
+    registry.view_namespace "DocsKitFinalizeSpecOtherPages"
+
+    expect(registry.from_slug("installation").view_class).to be(DocsKitFinalizeSpecOtherPages::Installation)
+  end
+
   it "fills the brand logo memo at boot" do
     DocsKit.configure { |c| c.brand_logo = { svg: "M0 0Z" } }
     DocsKit.finalize!

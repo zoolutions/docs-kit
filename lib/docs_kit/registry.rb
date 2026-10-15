@@ -88,8 +88,12 @@ module DocsKit
 
     # The namespace a page's view_class resolves under (v2 pages only), e.g.
     # "Views::Docs::Pages". Required to resolve views via the default Entry.
+    # Setting it drops the views #finalize! resolved under the old namespace.
     def view_namespace(value = nil)
-      @view_namespace = DocsKit::Shareable.make(value) if value
+      if value
+        @view_namespace = DocsKit::Shareable.make(value)
+        @view_classes = nil
+      end
       @view_namespace
     end
 
