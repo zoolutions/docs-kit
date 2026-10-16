@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [1.4.0]
+## [1.4.0] — 2026-10-15
 
 ### Upgrading from 1.3
 
@@ -95,7 +95,15 @@ raises `FrozenError`; so does mutating one of docs-kit's constants.
   `on_page` macros inherit from a parent page when unset. Pages using only the
   class macros render byte-identically. (#95)
 
-## [1.2.1] — 2026-09-30 (with 1.2.0, same day)
+## [1.2.1] — 2026-09-30
+
+### Changed
+
+- **daisyui 2.x is allowed.** The dependency is now `>= 1.2, < 3`. 1.2.0 was
+  tagged but never reached RubyGems (its release run failed a stale spec), so
+  1.2.1 is the first published 1.2 release.
+
+## [1.2.0] — 2026-09-30 (tagged; never published to RubyGems)
 
 ### Upgrading from 1.1
 
@@ -130,9 +138,6 @@ bundle exec rspec
 
 ### Changed
 
-- **daisyui 2.x is allowed.** The dependency is now `>= 1.2, < 3`. 1.2.0 was
-  tagged but never reached RubyGems (its release run failed a stale spec), so
-  1.2.1 is the first published 1.2 release.
 - **The reusable deploy workflow runs on Node 24 actions.** `deploy.yml` now
   uses `actions/checkout@v7`, `docker/setup-buildx-action@v4`,
   `docker/login-action@v4`, `docker/build-push-action@v7` and
@@ -169,7 +174,119 @@ bundle exec rspec
   `lexer:` still wins, and a block with neither (or an unguessable filename)
   stays Ruby, so existing output is unchanged.
 
-## [1.1.1] and earlier
+## [1.1.1] — 2026-08-27
+
+### Fixed
+
+- **`/llms.txt` sends a public max-age** (`expires_in 300, public: true`), so
+  shared caches such as dash-proxy can store it; ETag revalidation is
+  unchanged. (#75)
+
+## [1.1.0] — 2026-08-27
+
+### Added
+
+- **Docs versions foundation.** `c.versions` (`DocsKit::DocVersion`),
+  `c.repo_url` and `c.snapshots_path`, a request-scoped version
+  (`DocsKit::Scope`) and a snapshot content source. A site that configures no
+  versions renders unchanged. (#67)
+
+### Changed
+
+- **The reusable deploy workflow uses dash 4.** `deploy.yml` installs
+  `dash ~> 4.0` and runs `dash doctor` before deploying; the registry secret is
+  now `DASH_REGISTRY_PASSWORD` (`KAMAL_REGISTRY_PASSWORD` is still exported),
+  and the `docs-kit new` deploy template turns on dash-proxy compression,
+  caching and security headers. (#74)
+
+### Fixed
+
+- **Repointed at the `zoolutions` org.** The reusable deploy workflow, the
+  `docs-kit new` and install templates, the README and the gemspec metadata
+  now reference `zoolutions/docs-kit` (reusable-workflow `uses:` refs don't
+  follow the repo move's redirect). (#70)
+
+## [1.0.8] — 2026-08-04
+
+### Added
+
+- **`c.brand_logo`.** A config-driven brand mark (`svg:`, `paths:`, `markup:`,
+  `file:` or `src:`) rendered by the new `DocsUI::Logo` in the topbar and
+  sidebar brand links, falling back to `c.brand`; `c.landing.logo` accepts the
+  same forms. `c.topbar_brand = :mobile_only` hides the topbar copy where the
+  sidebar brand is already visible. (#68)
+
+### Changed
+
+- **The sidebar's top-level heading is flattened.** With one nav heading it
+  is no longer rendered; with several, each is a static `menu-title` label and
+  only subgroups collapse. The landing doc index follows the same rule. (#66)
+
+## [1.0.7] — 2026-08-03
+
+### Added
+
+- **Version-aware `--sync` migrations.** Install and `--sync` stamp the
+  initializer with `# docs-kit synced: vX.Y.Z`, and `--sync` runs the ordered
+  migrations between that version and the gem's, printing what it can't
+  automate. The migration registry ships empty in 1.0.x. (#56)
+- **Two homes: `c.app_link`.** An opt-in `c.app_link = { href:, label: }`
+  renders a topbar link back to the hosting app, and the page masthead's link
+  now follows `c.brand_href` instead of the host's `root_path` and reads
+  "← Docs home". (#63)
+
+## [1.0.6] — 2026-07-04
+
+### Added
+
+- **`DocsUI::Landing` hero logo (`c.landing.logo`).** The landing hero now takes
+  an optional brand mark above the eyebrow, in two forms: an inline single-path
+  SVG (`{ svg: "<path d>", viewbox:, label: }`, rendered with `fill: currentColor`
+  so it adapts to the theme) or an image (`{ src:, alt: }`, resolved through the
+  site's asset pipeline). nil (the default) omits it, so it's backwards-compatible.
+  This closes the gap a mounted docs app hit — a hero with no way to show the
+  product's own logo — the first consumer to try `DocsUI::Landing` on a real site.
+
+## [1.0.5] — 2026-07-04
+
+### Added
+
+- **`DocsUI::Landing` — a config-driven marketing landing page.** Every consuming
+  site (and this dogfood site) was hand-rolling a home page; now render
+  `DocsUI::Landing` and drive it from a new `c.landing` config block
+  (`DocsKit::LandingConfig`): a hero (`eyebrow`, `title` — wrap a run in
+  `**double asterisks**` to accent it in the primary color, `lead`, an optional
+  `install` code snippet, and `ctas`), a `features` card grid, and a
+  registry-grouped documentation index built from `nav_groups` (so it never drifts
+  from the authored pages). Every field is optional — with an empty `c.landing` it
+  still renders a minimal hero (brand + doc index), never a broken page — and its
+  `.md`/`.text` twin works like any page. The install generator's `landings#show`
+  now renders it and the initializer documents `c.landing`. This is the first
+  landing pattern proven on a **mounted** docs app (a docs section inside a larger
+  Rails app whose `/` is already taken), contributed back from that use case.
+
+## [1.0.4] — 2026-07-04
+
+### Changed
+
+- **rouge 5 is allowed.** The dependency is now `>= 4.0, < 6`; the `< 5` cap
+  was downgrading sites already on rouge 5. (#54)
+
+### Fixed
+
+- **`docs_kit:install --sync` no longer re-injects the commented `/mcp` route
+  scaffold** into a site that already draws live MCP routes. (#53)
+
+## [1.0.3] — 2026-07-04
+
+### Added
+
+- **`docs_kit:install` templates a lean multi-stage `Dockerfile` and a
+  `.dockerignore`.** The `Dockerfile` is site-owned (skipped if present) and
+  carries a `# docs-kit Dockerfile vX.Y.Z` marker that `--sync` warns about
+  when it is older than the gem; `docs-kit new` uses the same template. (#52)
+
+## [1.0.2] — 2026-07-03
 
 ### Fixed
 
@@ -185,28 +302,10 @@ bundle exec rspec
   to a `/assets` URL that actually returns 200 — the coverage isolated component
   specs can't provide.
 
+## [1.0.1] — 2026-07-03
+
 ### Added
 
-- **`DocsUI::Landing` hero logo (`c.landing.logo`).** The landing hero now takes
-  an optional brand mark above the eyebrow, in two forms: an inline single-path
-  SVG (`{ svg: "<path d>", viewbox:, label: }`, rendered with `fill: currentColor`
-  so it adapts to the theme) or an image (`{ src:, alt: }`, resolved through the
-  site's asset pipeline). nil (the default) omits it, so it's backwards-compatible.
-  This closes the gap a mounted docs app hit — a hero with no way to show the
-  product's own logo — the first consumer to try `DocsUI::Landing` on a real site.
-- **`DocsUI::Landing` — a config-driven marketing landing page.** Every consuming
-  site (and this dogfood site) was hand-rolling a home page; now render
-  `DocsUI::Landing` and drive it from a new `c.landing` config block
-  (`DocsKit::LandingConfig`): a hero (`eyebrow`, `title` — wrap a run in
-  `**double asterisks**` to accent it in the primary color, `lead`, an optional
-  `install` code snippet, and `ctas`), a `features` card grid, and a
-  registry-grouped documentation index built from `nav_groups` (so it never drifts
-  from the authored pages). Every field is optional — with an empty `c.landing` it
-  still renders a minimal hero (brand + doc index), never a broken page — and its
-  `.md`/`.text` twin works like any page. The install generator's `landings#show`
-  now renders it and the initializer documents `c.landing`. This is the first
-  landing pattern proven on a **mounted** docs app (a docs section inside a larger
-  Rails app whose `/` is already taken), contributed back from that use case.
 - **SEO + social sharing.** Every page now emits a complete SEO `<head>` —
   meta description, Open Graph, Twitter Card, canonical, favicon, robots, and
   theme-color — via the new `DocsUI::MetaTags` component, driven entirely by a
@@ -218,6 +317,11 @@ bundle exec rspec
   Backwards-compatible: a site that sets no `c.seo` renders a valid minimal card
   and its `<head>` is a strict superset of before. The install generator documents
   `c.seo` and installs the task; `docs-kit new` reminds the owner to run it. (#48)
+
+## [1.0.0] — 2026-07-03
+
+### Added
+
 - Release tooling matching the sibling gems (daisyui/phlex-reactive/pgbus): a
   `rake release[X.Y.Z]` task (version bump → lockfile update → build-verify →
   commit → push → GitHub Release; `pre`/`force` supported, `main`-only, clean-tree
