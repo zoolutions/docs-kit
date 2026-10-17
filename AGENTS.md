@@ -2,9 +2,9 @@
 
 The instruction file for every AI coding agent working in docs-kit — Claude
 Code imports it (`CLAUDE.md` is a one-line `@AGENTS.md` stub); Cursor,
-Copilot, Aider, Codex and others read it directly. Claude Code also has
-`.claude/commands/` and `.claude/rules/` for slash-command workflows, listed
-below; this file stays the shared source of project conventions.
+Copilot, Aider, Codex and others read it directly. The delivery workflow
+(`/flow:*`) comes from the shared plugins listed under Agent commands; this file
+stays the shared source of project conventions.
 
 docs-kit is a Rails engine that ships the shared Phlex/daisyUI **chrome** for
 documentation sites — the shell, sidebar, code blocks, theme switcher, page
@@ -97,7 +97,22 @@ Command output is condensed by rtk (PreToolUse hook). Write commands in
 hook-rewritable shapes: no `for`/subshell wrappers, no `| head` on
 rtk-handled commands, `bundle exec rubocop` not `bin/rubocop`.
 
-Never `gem push` by hand — release via `bin/release` (wraps `rake release[X.Y.Z]`).
+Never `gem push` by hand — release via `bin/release` (wraps `rake release[X.Y.Z]`). `bin/release`, `rakelib/release.rake` and the shared jobs of `release.yml` are the release kit, byte-identical across the gems: change them here (with specs), then roll out with `script/release-kit sync` or `/release-kit` (`RELEASE_KIT.md`).
+
+## Workflow
+
+- **Verify:** `bundle exec rubocop` · `bundle exec rspec` · `bundle exec conformance-kit check` (Ruby 4.0) · `docs/`: `cd docs && bundle exec rubocop && bundle exec rspec` · new CSS class or theme: `bun run build:css`
+- **Specs:** fast loop `bundle exec rspec <file>`; full suite `bundle exec rspec` (gem), `cd docs && bundle exec rspec` (request + Playwright system specs); two worktrees at once: yes, no shared service
+- **CI:** required `rake (Ruby 3.3)`, `rake (Ruby 3.4)`, `conformance / Conformance settings`, `conformance / Conformance (Ruby 4.0)`, branch up to date; `rake (Ruby 4.0)`, `docs site (RSpec + Playwright)`, `gate (no mcp gem)` report only; full suite on the PR; failure report none
+- **Review bot:** cubic
+- **Merge:** squash — `gh pr merge <PR> --squash --delete-branch`
+- **PR contract:** `## Summary`, `## Test plan`; exactly one `type` + at least one `area` label (`## Labels`); `DocsUI::` chrome or docs-page change: before/after screenshots (below)
+- **Conflicts:** `CHANGELOG.md` — both sides' bullets under `[Unreleased]`; `lib/docs_kit/version.rb` — keep the branch's bump (a release-prep PR), main's when accidental; `docs/Gemfile.lock` `docs/bun.lock` — main's, then `bundle install` / `bun install` in `docs/`, never by hand; `docs/app/assets/svg/icons/**` — one side whole; `docs/app/models/doc.rb`, `docs/config/routes.rb` — both, main's first
+- **Worktree setup:** `bundle install`; `cd docs && bundle install && bun install --frozen-lockfile`; undo none
+- **Release:** `bin/release <v>`; changelog `CHANGELOG.md`, heading `## [X.Y.Z] — YYYY-MM-DD` under `## [Unreleased]`; prep none; lockfiles `docs/Gemfile.lock`; docs `deploy-docs.yml` on release; human none
+- **Main health:** `gh run list --workflow ci.yml --branch main --event push --limit 1 --json conclusion,headSha`
+- **Upstream:** libraries we own `zoolutions/*`; scrub none
+- **Bench:** none
 
 ## Architecture
 
@@ -127,15 +142,24 @@ open, the "on this page" TOC) — there is no server round-trip. See
 - Unit specs (`spec/docs_kit/`) cover the config surface and the registry — no Rails boot.
 - Component specs (`spec/docs_ui/`) render a `DocsUI::` component and assert on the produced markup's semantics (an active link, a present theme option, a config-driven value).
 - Generator specs (`spec/generators/install_generator_spec.rb`) run `docs_kit:install` against a throwaway destination root (a tmp app skeleton, plain Thor — no Rails boot) and assert the file manifest + key contents.
-- Coverage: SimpleCov enforces `minimum_coverage 80` from within the suite (`bundle exec rspec` / `rake` fails below it); 100% aspired for `DocsKit::Configuration` and `DocsKit::Registry` (the public API sites depend on).
+- Coverage: SimpleCov enforces `minimum_coverage 80` from within the suite (`bundle exec rspec` / `rake` fails below it).
 - CI: `.github/workflows/ci.yml` runs `bundle exec rake` on Ruby 3.3/3.4/4.0 for every push to `main` and every PR; `.github/workflows/conformance.yml` runs `bundle exec conformance-kit check` (doctor, the `--tag ractor` canary, `conformance-audit --strict`, settings in `.conformance.yml`) on Ruby 4.0.
-- See `.claude/rules/testing.md`.
+- 100% is aspired to for `DocsKit::Configuration` and `DocsKit::Registry` (above); a component spec asserts on semantics, not full-HTML snapshots.
+
+## SEO head and OG image
+
+`DocsUI::MetaTags` emits description, Open Graph, Twitter Card, canonical, favicon, robots and theme-color from `DocsKit.configuration.seo` plus the page's title and description.
+
+- A new knob lives on `DocsKit::SeoConfig` with a default; the `<head>` of an unconfigured site stays a strict superset of the pre-SEO markup. Config free text goes in as Phlex attribute values, never `raw`/`html_safe`.
+- Per-page description is `self.class.description || lead`. Guard the no-request path (omit canonical, use the raw `og_image` path) instead of raising.
+- The OG image is the SITE's content: the gem ships none and `og_image` defaults to nil (unset means no `og:image` tag). It is a logical asset path resolved through `image_url` to the digested URL, never emitted raw (it 404s); a missing asset must raise `MissingAssetError` at `assets:precompile`, never be rescued.
+- Verify the chain in a booted app (`docs/test/integration/seo_meta_tags_test.rb`): `og:image` is an `/assets/` URL and GETting it returns 200. The screenshot tooling (`bin/rails docs_kit:og`) is resolved at task runtime and never a gem dependency or a CI job; `DocsKit::OgGenerator` is zeitwerk-ignored.
 
 ## Labels
 
 Every pull request carries exactly one `type` label and at least one `area`
-label from `.github/labels.yml` — never a `status` label. `/plan` labels the
-issue, `/lfg` copies the issue's `type` and `area` labels onto the PR (never
+label from `.github/labels.yml` — never a `status` label. `/flow:plan` labels the
+issue, `/flow:lfg` copies the issue's `type` and `area` labels onto the PR (never
 `plan` or another status label). Without an issue, the type comes from the
 change's conventional-commit prefix and the areas from
 `bin/labels infer $(git diff --name-only origin/main...HEAD)`. Labels change in
@@ -144,7 +168,7 @@ Rules: `.github/LABELS.md`.
 
 This repo holds the canonical labels kit (`bin/labels`, `.github/LABELS.md`,
 and the shared labels in `.github/labels.yml`); `script/labels-kit sync|check`
-rolls it out to the other zoolutions repos. See `LABELS_KIT.md`.
+rolls it out to the other zoolutions repos. See `LABELS_KIT.md`. Commit scopes: `shell`, `sidebar`, `code`, `page`, `theme`, `registry`, `controller`, `generator`, `engine`, `deploy`, `docs`, `ci`.
 
 ## Deploy
 
@@ -183,18 +207,20 @@ gh issue comment <n> --attach ./repro.mp4                       # video renders 
   a consuming site. Save under the scratchpad, never in the repo.
 - No `--attach` flag means an old `gh`: `brew upgrade gh`.
 
-## Claude Code specifics
+## Agent commands
 
-Slash commands (`.claude/commands/`) and rules (`.claude/rules/`) drive
-autonomous work: `/plan`, `/lfg`, `/tdd`, `/architect`, `/security`,
-`/review-pr`, `/github-review-pr`, `/github-review-failures`,
-`/github-review-comments`. Full purpose + model tier per command, and the
-model-tier convention (`haiku`/`sonnet`/`opus`/`fable`) for subagents:
-`.claude/README.md`.
+Plugins (`.claude/settings.json`): `/flow:lfg`, `/flow:plan`, `/flow:follow-through`, `/flow:finish-prs`,
+`/flow:github-review-pr` (`-failures`, `-comments`), `/flow:review-pr`, `/flow:tdd`, `/flow:debug-flaky`,
+the `flow:fable-validator` agent; `/ruby-gem:release`, `/ruby-gem:perf`. Local (`.claude/commands/`):
+`/architect` (the layer order), `/security` (HTML output, config trust, render path, generated files),
+`/release-kit` (rolls the release kit out to the other gems).
+
+Subagents: pass a cheaper `model:` (`haiku` for file finding and pattern scans, `sonnet` to read and
+summarise a subsystem) rather than inheriting the session's. Confirm how a consuming docs site wires
+docs-kit (config, Tailwind `@source`, importmap, deploy) before changing the install generator or the
+reusable workflow.
 
 ## More Documentation
 
-- `.claude/commands/` — slash command definitions
-- `.claude/rules/` — coding style, git workflow, testing, agents
-- `.claude/README.md` — command index + model tiers
+- `.claude/commands/` — the local slash commands
 - `README.md` — the full install/configure/render/deploy guide
