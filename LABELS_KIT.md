@@ -44,13 +44,13 @@ reliable signal.
 A repo on the kit labels from its slash commands, so labelling isn't left to
 memory:
 
-- `/plan` labels the issue it files: `plan` + one type + the areas from
+- `/flow:plan` labels the issue it files: `plan` + one type + the areas from
   `bin/labels infer <paths in the plan>`
-- `/lfg` carries the issue's type + areas onto the pull request
+- `/flow:lfg` carries the issue's type + areas onto the pull request
   (`gh pr create --label …`), or infers them for a description-only run
 - every other command that runs `gh pr create` / `gh issue create` passes
   labels too
-- `.claude/rules/git-workflow.md` and `AGENTS.md` state the rule
+- `AGENTS.md` states the rule
 - `.github/dependabot.yml` gives every update an explicit `labels:` list, so
   dependabot stops creating its own ecosystem labels (`ruby`, `github_actions`)
   that the sync would otherwise delete again
