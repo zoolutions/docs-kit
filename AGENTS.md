@@ -151,9 +151,9 @@ open, the "on this page" TOC) — there is no server round-trip. See
 `DocsUI::MetaTags` emits description, Open Graph, Twitter Card, canonical, favicon, robots and theme-color from `DocsKit.configuration.seo` plus the page's title and description.
 
 - A new knob lives on `DocsKit::SeoConfig` with a default; the `<head>` of an unconfigured site stays a strict superset of the pre-SEO markup. Config free text goes in as Phlex attribute values, never `raw`/`html_safe`.
-- Per-page description is `self.class.description || lead`. Guard the no-request path (omit canonical, use the raw `og_image` path) instead of raising.
+- Per-page description is `self.class.description || lead`. Guard isolated renders without a view context (omit a relative `og_image` and the request-derived canonical); a configured `site_url` and an absolute `og_image` still pass through instead of raising.
 - The OG image is the SITE's content: the gem ships none and `og_image` defaults to nil (unset means no `og:image` tag). It is a logical asset path resolved through `image_url` to the digested URL, never emitted raw (it 404s); a missing asset must raise `MissingAssetError` at `assets:precompile`, never be rescued.
-- Verify the chain in a booted app (`docs/test/integration/seo_meta_tags_test.rb`): `og:image` is an `/assets/` URL and GETting it returns 200. The screenshot tooling (`bin/rails docs_kit:og`) is resolved at task runtime and never a gem dependency or a CI job; `DocsKit::OgGenerator` is zeitwerk-ignored.
+- Verify the chain in a booted app (`docs/spec/system/seo_meta_tags_spec.rb`): `og:image` is an `/assets/` URL and GETting it returns 200. The screenshot tooling (`bin/rails docs_kit:og`) is resolved at task runtime and never a gem dependency or a CI job; `DocsKit::OgGenerator` is zeitwerk-ignored.
 
 ## Labels
 
