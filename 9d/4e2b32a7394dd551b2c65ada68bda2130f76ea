@@ -1,0 +1,21 @@
+spec/docs_kit/engine_spec.rb
+  ai_agent 26-33
+docs/spec/system/docs_chrome_spec.rb
+  ai_agent 29-36
+config/importmap.rb
+  ai_agent 3-6,8-9,11-13,15-17
+lib/docs_kit/engine.rb
+  ai_agent 52-56,59-67
+docs/spec/requests/docs_nav_pin_spec.rb
+  ai_agent 1-20
+spec/docs_kit/importmap_pin_spec.rb
+  ai_agent 1-64
+Gemfile
+  ai_agent 26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9d4e2b32a7394dd551b2c65ada68bda2130f76ea",
+  "prompts": {}
+}
