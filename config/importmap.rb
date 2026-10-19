@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
-# Auto-pins the gem's bundled Stimulus controllers for importmap-rails consumers.
-# Exposes `docs_kit/controllers/docs_nav_controller`. Register it in the host app:
+# Auto-pins the gem's bundled Stimulus controller (docs-nav) for importmap-rails
+# consumers. With the defaults it is `docs_kit/controllers/docs_nav_controller`,
+# preloaded nowhere. Two engine options, set in the host's config/application.rb,
+# shape the pin:
 #
-#   // app/javascript/controllers/index.js
-#   import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
-#   eagerLoadControllersFrom("docs_kit/controllers", application)
+#   config.docs_kit.preload = false                         # true, or an entry point ("docs")
+#   config.docs_kit.controllers_under = "docs_kit/controllers"  # "controllers" rides the host's lazy loader
 #
-# Use eagerLoadControllersFrom (already imported in the default index.js), NOT
-# lazyLoadControllersFrom — the latter isn't imported there, so calling it throws
-# a ReferenceError that aborts the module and no controllers register at all.
+# How to register the controller in the host's controllers/index.js, and which
+# loader to avoid: README → "Registering the controller".
+docs_kit = DocsKit::Engine.config.docs_kit
 pin_all_from DocsKit::Engine.root.join("app/javascript/docs_kit/controllers"),
-             under: "docs_kit/controllers",
-             to: "docs_kit/controllers"
+             under: docs_kit.controllers_under,
+             to: "docs_kit/controllers",
+             preload: docs_kit.preload

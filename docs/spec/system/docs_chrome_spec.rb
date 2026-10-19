@@ -26,6 +26,14 @@ RSpec.describe "Docs chrome", type: :system do
     expect(page).to have_css(".code-highlight")  # a Rouge-highlighted code block
   end
 
+it "connects the docs-nav controller, which builds the on-this-page TOC" do
+  visit "/docs/configuration"
+
+  # docs-nav is no longer preloaded (#107): the eager loader in
+  # controllers/index.js imports it, and once connected it fills the TOC.
+  expect(page).to have_css("[data-docs-nav-target=toc] ul[data-docs-nav-generated] a", visible: :all)
+end
+
   it "marks the current page's sidebar link active (server-rendered, no JS)", :desktop_only do
     visit "/docs/configuration"
 
