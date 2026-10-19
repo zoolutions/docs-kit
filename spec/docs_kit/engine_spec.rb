@@ -23,6 +23,14 @@ RSpec.describe DocsKit::Engine do
     expect(described_class.config.docs_kit.auto_pin).to be(true)
   end
 
+  it "defaults config.docs_kit.preload to false" do
+    expect(described_class.config.docs_kit.preload).to be(false)
+  end
+
+  it "defaults config.docs_kit.controllers_under to docs_kit/controllers" do
+    expect(described_class.config.docs_kit.controllers_under).to eq("docs_kit/controllers")
+  end
+
   it "adds the gem's pins to the host import map by default" do
     run_importmap_initializer
 

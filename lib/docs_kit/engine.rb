@@ -49,11 +49,22 @@ module DocsKit
       app.config.assets.paths << JAVASCRIPT_PATH.to_s if app.config.respond_to?(:assets)
     end
 
-    # Host-facing engine options. `config.docs_kit.auto_pin = false` (in
-    # config/application.rb) keeps the gem's pin out of the host's shared import
-    # map, for a host that pins `docs_kit/controllers` in a dedicated docs map.
+    # Host-facing engine options, set in config/application.rb: importmap-rails
+    # draws the auto-pin in its own initializer, before config/initializers run.
+    # `config.docs_kit.auto_pin = false` keeps the gem's pin out of the host's
+    # shared import map, for a host that pins `docs_kit/controllers` in a
+    # dedicated docs map.
     config.docs_kit = ActiveSupport::OrderedOptions.new
     config.docs_kit.auto_pin = true
+    # The auto-pin's `preload:`. false (the default) keeps docs-nav out of every
+    # page's modulepreloads; true preloads it everywhere; an entry-point name (or
+    # an array, importmap-rails 2.x) preloads it only where that entry point loads.
+    config.docs_kit.preload = false
+    # The auto-pin's module namespace. "controllers" pins docs-nav as
+    # `controllers/docs_nav_controller`, so the host's own
+    # `lazyLoadControllersFrom("controllers", application)` loads it by convention
+    # on the pages that render it. The asset path never changes.
+    config.docs_kit.controllers_under = "docs_kit/controllers"
 
     # Auto-pin the controller for importmap-rails consumers, so a host app gets
     # `docs_kit/controllers/docs_nav_controller` with no manual pin.

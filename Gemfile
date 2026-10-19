@@ -23,6 +23,7 @@ end
 group :development, :test do
   gem "async", require: false # runs conformance-kit's "fiber-safe under an Async reactor" example
   gem "conformance-kit", "~> 0.4", require: false # concurrency conformance gates (zoolutions/phlex-reactive#363)
+  gem "importmap-rails", require: false # spec/docs_kit/importmap_pin_spec.rb draws config/importmap.rb into a real Importmap::Map
   gem "rake"
   gem "rspec"
   gem "rubocop", require: false
