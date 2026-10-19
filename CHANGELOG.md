@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+### Upgrading from 1.4
+
+Nothing to change for a site that registers the controller with
+`eagerLoadControllersFrom("docs_kit/controllers", application)`, as the
+generated `index.js` does: `docs-nav` still registers on every page. It is no
+longer preloaded, so on docs pages the eager loader's `import()` fetches it
+one request later instead of from the preload cache. To keep the preload, set
+`config.docs_kit.preload = true` in `config/application.rb`.
+
+### Added
+
+- **`config.docs_kit.controllers_under`** (default `"docs_kit/controllers"`)
+  sets the auto-pin's module namespace. `"controllers"` pins the controller as
+  `controllers/docs_nav_controller` (same asset), so the host's own loader for
+  `controllers` finds it, with no docs-kit line in `index.js`; with
+  `lazyLoadControllersFrom("controllers", application)` a page fetches it only
+  if it renders `data-controller="docs-nav"`. Set it in
+  `config/application.rb`. (#107)
+
+### Changed
+
+- **`docs-nav` is no longer preloaded on every page.** The auto-pin took
+  importmap-rails' default `preload: true`, so in a host whose docs share the
+  application's import map every page, docs or not, carried a
+  `<link rel="modulepreload">` for the 24 KB controller, and a host `pin` with
+  `preload: false` could not override it (a `pin_all_from` directory expands
+  over plain pins). `config.docs_kit.preload` (default `false`) is now the
+  pin's `preload:`: `true` restores 1.4's behaviour, an entry-point name
+  (importmap-rails 2.x) preloads it only where that entry point is rendered.
+  (#107)
+
+### Fixed
+
+- **One documented registration.** The README and the pin file's header now
+  point at one "Registering the controller" section. The README no longer
+  recommends `lazyLoadControllersFrom("docs_kit/controllers", application)`,
+  which in a host with its own controllers requests
+  `docs_kit/controllers/<identifier>_controller` for every host
+  `data-controller` and logs a "Failed to autoload controller" error for each,
+  on every page. (#107)
+
 ## [1.4.0] — 2026-10-15
 
 ### Upgrading from 1.3

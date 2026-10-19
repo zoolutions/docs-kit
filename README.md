@@ -124,7 +124,7 @@ generators:
 |-------|---------------|-----|
 | `ApplicationController#render_page` defined by hand | `DocsKit::Controller#render_page` is included (the generator injects `include DocsKit::Controller`) | Delete the method — keep the `include`. |
 | `app/helpers/icon_helper.rb` | docs-kit renders icons via rails_icons (`DocsUI::Icon`) | Delete the file. |
-| Hand-pinned docs-kit lines in `config/importmap.rb` | the engine auto-pins the `docs-nav` controller and its assets | Delete the manual `pin`/`pin_all_from` lines for docs-kit. |
+| Hand-pinned docs-kit lines in `config/importmap.rb` | the engine auto-pins the `docs-nav` controller and its assets | Delete the manual `pin`/`pin_all_from` lines for docs-kit. A line kept only to change `preload:` or `under:` becomes `config.docs_kit.preload` or `config.docs_kit.controllers_under` in `config/application.rb` (see [Registering the controller](#registering-the-controller)). |
 | `Dockerfile` stamped by an older docs-kit (`# docs-kit Dockerfile vX.Y.Z`) | docs-kit ships an optimized, multi-stage Dockerfile; a stale copy misses image-size wins | Diff yours against the current template (`lib/generators/docs_kit/install/templates/Dockerfile.tt` in the gem), adopt the changes or replace it. See [Upgrading your Dockerfile](#upgrading-your-dockerfile). |
 | `app/assets/stylesheets/tailwind.sources.css` committed to git | `bin/build-css` regenerates it on every build with machine-specific absolute gem paths — the committed copy churns per machine/Ruby and no build consumes it. The generator adds the `.gitignore` entry, but gitignoring doesn't untrack an already-committed copy. | `git rm --cached app/assets/stylesheets/tailwind.sources.css` and commit. |
 
@@ -1123,12 +1123,74 @@ server round-trip:
   of three placements, auto-hiding on short pages. No server-side knowledge of
   the headings, no per-page wiring.
 
+### Registering the controller
+
+The engine pins `docs-nav` into the host's import map as
+`docs_kit/controllers/docs_nav_controller`, with no `<link rel="modulepreload">`
+on any page. Register it in `app/javascript/controllers/index.js` one of two
+ways.
+
+**Eager** — what `docs_kit:install` writes, next to the stock eager loader:
+
+```js
+import { eagerLoadControllersFrom } from "@hotwired/stimulus-loading"
+eagerLoadControllersFrom("docs_kit/controllers", application)
+```
+
+It imports the controller on every page that loads the entry point, whether
+the page renders `docs-nav` or not. Right for a docs-only site, where every page
+renders the sidebar.
+
+**Through the host's own loader** — pin `docs-nav` under the host's
+`controllers` namespace instead, and add no docs-kit line to `index.js`:
+
+```ruby
+# config/application.rb
+config.docs_kit.controllers_under = "controllers"
+```
+
+The module becomes `controllers/docs_nav_controller` (same asset), so the
+host's existing `eagerLoadControllersFrom("controllers", application)` or
+`lazyLoadControllersFrom("controllers", application)` finds it by convention.
+With the lazy loader, a page fetches `docs-nav` only if it renders
+`data-controller="docs-nav"`: the setup for a host whose docs share an app with
+other pages. Drop an old `eagerLoadControllersFrom("docs_kit/controllers", ...)`
+line, which no longer matches anything. Don't keep a host file named
+`app/javascript/controllers/docs_nav_controller.js`: it has the same module
+name, and the host's `config/importmap.rb` is drawn after the engine's, so it
+replaces docs-kit's controller.
+
+> **Don't** call `lazyLoadControllersFrom("docs_kit/controllers", application)`
+> in a host with its own controllers. A lazy loader imports
+> `<under>/<identifier>_controller` for *every* `data-controller` on the page
+> that isn't registered yet, so `data-controller="dropdown"` makes it request
+> `docs_kit/controllers/dropdown_controller`, which isn't in the map: one
+> "Failed to autoload controller" console error per host identifier, on every
+> page. A second lazy loader is only safe on a namespace that owns every
+> identifier on the page.
+
+**Preloading.** `config.docs_kit.preload` (default `false`) is the pin's
+`preload:`. `true` puts a modulepreload for `docs-nav` on every page that renders
+the import map (docs-kit 1.4's behaviour). An entry-point name, such as
+`"docs"`, preloads it only on pages that render that entry point; it needs
+importmap-rails 2.x (1.x takes only `true`/`false`, and docs-kit doesn't check).
+
+```ruby
+# config/application.rb — defaults shown
+config.docs_kit.preload = false                         # true | "docs" | %w[docs admin]
+config.docs_kit.controllers_under = "docs_kit/controllers"
+```
+
+importmap-rails draws the pin in its own initializer, before
+`config/initializers/` run, so set both in `config/application.rb`. With
+`config.docs_kit.auto_pin = false` neither applies: the host owns the pin.
+
 ### A dedicated docs import map
 
 By default the Shell loads the host's `application` entry point from
 `Rails.application.importmap`, and the engine adds the `docs-nav` pin to that
 map. A host with several import maps can give its docs their own entry point
-and map, and keep the docs controller out of every other page's preloads:
+and map:
 
 ```ruby
 # config/application.rb — skip the engine's auto-pin into the shared map
@@ -1150,14 +1212,17 @@ pin "docs"
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
+# This map only loads on docs pages, so preloading docs-nav here is the point.
 pin_all_from DocsKit::Engine.root.join("app/javascript/docs_kit/controllers"),
-             under: "docs_kit/controllers", to: "docs_kit/controllers"
+             under: "docs_kit/controllers", to: "docs_kit/controllers", preload: true
 ```
 
 `c.importmap` takes an `Importmap::Map` or a callable returning one; a callable
 is resolved on every render, so a map rebuilt on code reload is picked up. The
-`docs` entry point registers the controllers with
-`eagerLoadControllersFrom("docs_kit/controllers", application)`.
+`docs` entry point registers the controller eagerly, as in
+[Registering the controller](#registering-the-controller). With one shared map,
+a `docs` entry point and `config.docs_kit.preload = "docs"` preload `docs-nav`
+on docs pages only, without a second map.
 
 ### On this page (auto-TOC)
 
@@ -1183,13 +1248,7 @@ headings, so they need zero per-page data. A page with fewer than 2 sections
 hides the TOC. Scroll-spy highlights the section you're reading.
 
 `DocsUI::Sidebar` already carries `data-controller="docs-nav"`. Register the
-controller in the host app:
-
-```js
-// app/javascript/controllers/index.js
-import { lazyLoadControllersFrom } from "@hotwired/stimulus-loading"
-lazyLoadControllersFrom("docs_kit/controllers", application)
-```
+controller as in [Registering the controller](#registering-the-controller).
 
 The **active nav item** needs no JS — it's server-rendered from the request path.
 
